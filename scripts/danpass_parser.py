@@ -8,6 +8,10 @@ parser.add_option('-o', '--output',
                   dest="fout", 
                   default="new_enhanced.TextGrid",
                   )
+parser.add_option('-s', '--sound',
+                  dest="sound",
+                  default="Transvar_transuddrag.wav",
+                  )
 parser.add_option('-t', '--table',
                   dest="soundtype_tbl",
                   default=False,
@@ -17,10 +21,7 @@ parser.add_option('-i', '--input',
                   dest="fin",
                   default='alle_segment_praatipa_renset.TextGrid',
                  )
-parser.add_option('-s', '--sound',
-                  dest="sound",
-                  default="Transvar_transuddrag.wav",
-                  )
+
 options, remainder = parser.parse_args()
 
 print(options)
@@ -46,11 +47,13 @@ block = ['"POS"', '"POS (reduceret tagset)"', '"fonemnotation"',
 		'"tryk og tone"', '"fraseintonation"', '"kommentarer"',
 		'"info-struktur"']
 
-data.hnrTier('hnr_mono.psc', 'm_033_k.wav', downsample=16)
+data.hnrTier('hnr_mono.psc', options.sound, downsample=16)
 
 print(data)
 
-data.printGrid(fout, block)
+print(data.timeSliceTier(35))
+
+#data.printGrid(fout, block)
 
 
 # class DanPASS(object):
