@@ -9,33 +9,33 @@ from TextGrid import Grid
 '''
 
 
-parser = optparse.OptionParser()
-parser.add_option('-o', '--output', 
-                  dest="fout", 
-                  default="new_enhanced.TextGrid",
-                  )
-parser.add_option('-t', '--table',
-                  dest="soundtype_tbl",
-                  default=False,
-                  action="store",
-                  )
-parser.add_option('-i', '--input',
-                  dest="fin",
-                  default='alle_segment_praatipa_renset.TextGrid',
-                 )
-options, remainder = parser.parse_args()
+# parser = optparse.OptionParser()
+# parser.add_option('-o', '--output', 
+#                   dest="fout", 
+#                   default="new_enhanced.TextGrid",
+#                   )
+# parser.add_option('-t', '--table',
+#                   dest="soundtype_tbl",
+#                   default=False,
+#                   action="store",
+#                   )
+# parser.add_option('-i', '--input',
+#                   dest="fin",
+#                   default='alle_segment_praatipa_renset.TextGrid',
+#                  )
+# options, remainder = parser.parse_args()
 
 
-try:
-	fin = codecs.open(options.fin, 'r', 'utf8')
-	fout = codecs.open(options.fout, 'w', 'utf8')
-	if options.soundtype_tbl:
-		tbl = codecs.open(options.soundtype_tbl, 'r', 'utf8')
-	else:
-		tbl = False
-except:
-	print("Unable to access all necessary files." )
-	sys.exit('Terminate.')
+# try:
+# 	fin = codecs.open(options.fin, 'r', 'utf8')
+# 	fout = codecs.open(options.fout, 'w', 'utf8')
+# 	if options.soundtype_tbl:
+# 		tbl = codecs.open(options.soundtype_tbl, 'r', 'utf8')
+# 	else:
+# 		tbl = False
+# except:
+# 	print("Unable to access all necessary files." )
+# 	sys.exit('Terminate.')
 
 def parse(filehandle, filepath, tbl=False):
 

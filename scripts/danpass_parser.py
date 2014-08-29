@@ -2,6 +2,7 @@ from praatparser import parse as gridParse
 import os, sys, codecs
 import optparse
 
+print(sys.argv)
 
 parser = optparse.OptionParser()
 parser.add_option('-o', '--output', 
@@ -10,8 +11,9 @@ parser.add_option('-o', '--output',
                   )
 parser.add_option('-s', '--sound',
                   dest="sound",
-                  default="Transvar_transuddrag.wav",
-                  )
+                  action="store",
+                  default='Transvar_transuddrag.wav',
+                 )
 parser.add_option('-t', '--table',
                   dest="soundtype_tbl",
                   default=False,
