@@ -57,3 +57,21 @@ class Tier(object):
 		for n, i in enumerate(self.intervals):
 			filehandle.write(' '*8 + 'intervals [' + str(n+1) + ']:\n')
 			i.printGrid(filehandle)
+
+	def timedInterval(self, start, end=False):
+		"""Returns the interval at the specified time. The time will rarely be
+		exact, so choose the minimum distance one. It is also possible to give
+		a time frame and be returned a larger set of Interval objects"""
+		assert type(start) == float
+		interval1 = min(enumerate(a), key=lambda x: abs(x.xmin-start))
+
+		if end:
+			assert type(end) == float
+			interval2 = min(enumerate(a), key=lambda x: abs(x.xmax-start))
+
+			return (interval1[0], interval2[0])
+		else:
+			return (interval1[0], interval1[0]+1)
+
+
+

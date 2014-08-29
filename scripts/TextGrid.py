@@ -305,7 +305,26 @@ class Grid(object):
 
 		self.addTier(hnrParse(hnr))
 
+	def timeSliceTier(self, tiername, start, end=False):
+		"""Finds the Interval object(s) at the specified time (interval)"""
+
+		try:
+			start = float(start)
+			if end:
+				end = float(end)
+		except:
+			if end:
+				sys.exit("Cannot convert " + str(start) + " and " + str(end) + " to floats. Terminate" )
+			else:
+				sys.exit("Cannot convert " + str(start) + " to float. Terminate" )
+
+
+		return self[tiername].timedInterval(start, end)
+
+
+
+
 
 
 ## TODO:
-# 		Wrapper for PRAAT script to calculate HNR
+#
