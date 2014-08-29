@@ -37,7 +37,7 @@ class Grid(object):
 		return ''
 
 	def __getitem__(self, key):
-		return self.tiers[key]
+		return self.tidx[key]
 
 	def keys(self):
 		return self.tidx.keys()
@@ -116,7 +116,6 @@ class Grid(object):
 
 		for j in range(len(srcMat[0])):
 			anots = sum([1 for x in srcMat[:,j] if symbol in x.text])
-			#print([x.text for x in srcMat[:,j]])
 			if anots >= majority:
 				newtier.addInterval(template[j].copy('"' + symbol + '"'))
 			else:
@@ -156,7 +155,6 @@ class Grid(object):
 		for n, i in enumerate(tier1.intervals):
 			key = tuple(sorted([i.text, tier2[n].text]))
 			confusiontbl[key] = confusiontbl.get(key, 0) + 1
-		#print(confusiontbl)
 
 		return confusiontbl
 
@@ -216,14 +214,12 @@ class Grid(object):
 		
 		self.maceTiers(tiernames, filename, sep=',')
 
-
 		#outputs prediction and competence
 		print('Running Mace ...')
 		cmd = [macepath, filename]
 		subprocess.call(cmd, stderr=subprocess.DEVNULL)
-
 		print('Mace terminated.')
-
+		
 		template = self.getTier(tiernames[0])
 		macetier = Tier(template.xmin, template.xmax, 
 						template.size, macetiername)
@@ -239,7 +235,6 @@ class Grid(object):
 
 		# Add competence estimates to tiers
 		comp = codecs.open('competence', 'r', 'utf8').read().split()
-		#print(comp)
 		n = 0
 		for t in tiernames:
 			tier = self.getTier(t)
@@ -290,19 +285,17 @@ class Grid(object):
 		if path == '':
 			praatpath = '.'
 		else:
-			praatpath = path
+			praatpath = os.path.abspath(path)
 		if not outputdir:
 			outputdir = praatpath
 
 		# Assume the file extension correctly indicates the encoding
 		assert ext == '.wav'
-
 		subprocess.call(['praat', praatscript, praatpath, stem, outputdir])
 
 		# Read the Harmonicity 2 object file 
 		hnrfile = os.path.join(outputdir, stem + '_HNR.dat')
 		hnr = codecs.open(hnrfile, 'r', 'utf8')
-
 		self.addTier(hnrParse(hnr))
 
 	def timeSliceTier(self, tiername, start, end=False):
@@ -317,7 +310,6 @@ class Grid(object):
 				sys.exit("Cannot convert " + str(start) + " and " + str(end) + " to floats. Terminate" )
 			else:
 				sys.exit("Cannot convert " + str(start) + " to float. Terminate" )
-
 
 		return self[tiername].timedInterval(start, end)
 

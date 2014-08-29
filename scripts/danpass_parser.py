@@ -2,8 +2,6 @@ from praatparser import parse as gridParse
 import os, sys, codecs
 import optparse
 
-print(sys.argv)
-
 parser = optparse.OptionParser()
 parser.add_option('-o', '--output', 
                   dest="fout", 
@@ -49,11 +47,21 @@ block = ['"POS"', '"POS (reduceret tagset)"', '"fonemnotation"',
 		'"tryk og tone"', '"fraseintonation"', '"kommentarer"',
 		'"info-struktur"']
 
-data.hnrTier('hnr_mono.psc', options.sound, downsample=16)
+data.hnrTier('scripts/hnr_mono.psc', options.sound, downsample=16)
 
 print(data)
 
-print(data.timeSliceTier(35))
+tierslice = data.timeSliceTier('"stød-stavelse"', 35, 36)
+
+print(tierslice)
+
+t = data['"stød-stavelse"']
+for i in t[tierslice[0]:tierslice[1]]:
+      print(i)
+
+##TODO:
+# fix the time slicing methods so they also work with two time indices
+
 
 #data.printGrid(fout, block)
 

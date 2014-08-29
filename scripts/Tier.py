@@ -61,13 +61,14 @@ class Tier(object):
 	def timedInterval(self, start, end=False):
 		"""Returns the interval at the specified time. The time will rarely be
 		exact, so choose the minimum distance one. It is also possible to give
-		a time frame and be returned a larger set of Interval objects"""
+		a time frame and be returned a larger set of Interval objects."""
+		
 		assert type(start) == float
-		interval1 = min(enumerate(a), key=lambda x: abs(x.xmin-start))
+		interval1 = min(enumerate(self.intervals), key=lambda x: abs(x[1].xmin-start))
 
 		if end:
 			assert type(end) == float
-			interval2 = min(enumerate(a), key=lambda x: abs(x.xmax-start))
+			interval2 = min(enumerate(self.intervals), key=lambda x: abs(x[1].xmax-start))
 
 			return (interval1[0], interval2[0])
 		else:
