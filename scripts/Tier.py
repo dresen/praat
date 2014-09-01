@@ -59,20 +59,22 @@ class Tier(object):
 			i.printGrid(filehandle)
 
 	def timedInterval(self, start, end=False):
-		"""Returns the interval at the specified time. The time will rarely be
-		exact, so choose the minimum distance one. It is also possible to give
-		a time frame and be returned a larger set of Interval objects."""
+		"""Returns the interval at the specified time. The time boundaries will
+		rarely exectly match, so choose the minimum distance one. It is also 
+		possible to give a time frame and be returned a larger set of Interval 
+		objects."""
 		
 		assert type(start) == float
 		interval1 = min(enumerate(self.intervals), key=lambda x: abs(x[1].xmin-start))
 
 		if end:
 			assert type(end) == float
-			interval2 = min(enumerate(self.intervals), key=lambda x: abs(x[1].xmax-start))
-
-			return (interval1[0], interval2[0])
+			interval2 = self.timedInterval(end)
 		else:
-			return (interval1[0], interval1[0]+1)
+			interval2 = interval1
+
+		return (interval1[0], interval2[0]+1)
+		
 
 
 
