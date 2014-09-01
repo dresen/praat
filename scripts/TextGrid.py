@@ -5,7 +5,7 @@ from Tier import Tier
 from Interval import Interval
 from operator import itemgetter, attrgetter
 from numpy import array as nparray
-from harmonicityparser import parse as hnrParse
+from praatNumericParser import parse as numParse
 
 
 class Grid(object):
@@ -282,6 +282,9 @@ class Grid(object):
 		# Create arguments for system call
 		path, filename = os.path.split(sndfile)
 		stem, ext = os.path.splitext(filename)
+		assert ext == '.wav'
+
+		# Set paths
 		if path == '':
 			praatpath = '.'
 		else:
@@ -289,14 +292,50 @@ class Grid(object):
 		if not outputdir:
 			outputdir = praatpath
 
-		# Assume the file extension correctly indicates the encoding
-		assert ext == '.wav'
-		subprocess.call(['praat', praatscript, praatpath, stem, outputdir])
-
-		# Read the Harmonicity 2 object file 
 		hnrfile = os.path.join(outputdir, stem + '_HNR.dat')
+
+		# File exists skip computation
+		if os.path.exists(hnrfile):
+			pass
+		else:
+			# Assume the file extension correctly indicates the encoding
+			subprocess.call(['praat', praatscript, praatpath, stem, outputdir])
+
+		# Read the Harmonicity 2 object file 		
 		hnr = codecs.open(hnrfile, 'r', 'utf8')
-		self.addTier(hnrParse(hnr))
+		self.addTier(numParse(hnr))
+
+	def intensityTier(self, praatscript, sndfile, outputdir=False, 
+		downsample=False):
+
+		assert os.path.exists(praatscript) == True
+		assert os.path.exists(sndfile) == True
+
+		# Create arguments for system call
+		path, filename = os.path.split(sndfile)
+		stem, ext = os.path.splitext(filename)
+		assert ext == '.wav'
+
+		# Set paths
+		if path == '':
+			praatpath = '.'
+		else:
+			praatpath = os.path.abspath(path)
+		if not outputdir:
+			outputdir = praatpath
+
+		intfile = os.path.join(outputdir, stem + '_INT.dat')
+
+		# Skip computation if file exists from a previous iteration
+		if os.path.exists(intfile):
+			pass
+		else:
+			subprocess.call(['praat', praatscript, praatpath, stem, outputdir])
+
+
+		# Assume the file extension correctly indicates the encoding
+		intensity = codecs.open(intfile, 'r', 'utf8')
+		self.addTier(numParse(intensity))
 
 	def timeSliceTier(self, tiername, start, end=False):
 		"""Finds the Interval object(s) at the specified time (interval)"""

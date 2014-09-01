@@ -74,6 +74,15 @@ class Tier(object):
 			interval2 = interval1
 
 		return (interval1[0], interval2[0]+1)
+
+	def thresholdInterval(self, threshold, interval):
+
+		assert type(threshold) == float
+
+		try:
+			return float(interval.text) > threshold
+		except:
+			sys.exit("thresholdInterval(): Unable to compare " + interval.text + " and " + str(threshold))
 		
 
 
