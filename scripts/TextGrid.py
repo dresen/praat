@@ -6,6 +6,7 @@ from Interval import Interval
 from operator import itemgetter, attrgetter
 from numpy import array as nparray
 from praatNumericParser import parse as numParse
+from praatPitchParser import parse as pitchParse
 
 
 class Grid(object):
@@ -336,6 +337,41 @@ class Grid(object):
 		# Assume the file extension correctly indicates the encoding
 		intensity = codecs.open(intfile, 'r', 'utf8')
 		self.addTier(numParse(intensity))
+
+	def pitchIntTier(self, praatscript, sndfile, outputdir=False, 
+		downsample=False):
+
+		assert os.path.exists(praatscript) == True
+		assert os.path.exists(sndfile) == True
+
+		# Create arguments for system call
+		path, filename = os.path.split(sndfile)
+		stem, ext = os.path.splitext(filename)
+		assert ext == '.wav'
+
+		# Set paths
+		if path == '':
+			praatpath = '.'
+		else:
+			praatpath = os.path.abspath(path)
+		if not outputdir:
+			outputdir = praatpath
+
+		pitchfile = os.path.join(outputdir, stem + '_PtR.dat')
+
+		# Skip computation if file exists from a previous iteration
+		if os.path.exists(pitchfile):
+			pass
+		else:
+			subprocess.call(['praat', praatscript, praatpath, stem, outputdir])
+
+
+		# Assume the file extension correctly indicates the encoding
+		pitch = codecs.open(pitchfile, 'r', 'utf8')
+		(pitchTier, intTier) = pitchParse(pitch)
+		self.addTier(intTier)
+		self.addTier(pitchTier)
+
 
 	def timeSliceTier(self, tiername, start, end=False):
 		"""Finds the Interval object(s) at the specified time (interval)"""

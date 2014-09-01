@@ -47,16 +47,15 @@ block = ['"POS"', '"POS (reduceret tagset)"', '"fonemnotation"',
 		'"tryk og tone"', '"fraseintonation"', '"kommentarer"',
 		'"info-struktur"']
 
-data.hnrTier('scripts/int-hnr_mono.psc', options.sound, downsample=16)
-data.intensityTier('scripts/int-hnr_mono.psc', options.sound, downsample=16)
+data.hnrTier('scripts/f0-int-hnr_mono.psc', options.sound, downsample=16)
+#data.intensityTier('scripts/int-hnr_mono.psc', options.sound, downsample=16)
+data.pitchIntTier('scripts/f0-int-hnr_mono.psc', options.sound, downsample=16)
 
 #print(data)
 
-tierslice = data.timeSliceTier('"stød-stavelse"', 35, 36)
+print(data['"Pitch 1"'])
 
-t = data['"stød-stavelse"']
-for i in t[tierslice[0]:tierslice[1]]:
-      print(i)
+data.printGrid(fout, block)
 
 ##TODO:
 # fix the time slicing methods so they also work with two time indices
