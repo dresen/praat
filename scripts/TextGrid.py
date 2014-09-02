@@ -11,7 +11,9 @@ from praatPitchParser import parse as pitchParse
 
 class Grid(object):
 
-    """docstring for Grid"""
+    """docstring for Grid
+    A class for storing a Praat TextGrid and performing data transformations
+    and anlyses. """
 
     def __init__(self, xmin, xmax, size, nid):
         super(Grid, self).__init__()
@@ -43,6 +45,7 @@ class Grid(object):
         return self.tidx[key]
 
     def keys(self):
+    	"""Returns a list of the names of the Tier objects in the Grid"""
         return self.tidx.keys()
 
     def addTier(self, newtier):
@@ -63,9 +66,7 @@ class Grid(object):
             fout = filename
 
         tierFilter = [self.getTier(x) for x in rmtiernames]
-
         tiers = [x for x in self.tiers if x not in tierFilter]
-
         header = ['File type = "ooTextFile"',
                   'Object class = "TextGrid"',
                   '',
@@ -85,7 +86,8 @@ class Grid(object):
         fout.close()
 
     def getTier(self, name):
-        """Method to retrieve a tier by id ( which is a name ) ."""
+        """Method to retrieve a tier by id ( which is a name ) .
+        Replaced by the __getitem__() function, but kept for convenience"""
         return self.tidx[name]
 
     def extractTier(self, srcTiername, name, symbol):
@@ -137,6 +139,8 @@ class Grid(object):
         self.mergeIntervals(name)
 
     def mergeIntervals(self, name):
+    	"""Merges Interval objects in a specific Tier that have the same 
+    	annotation. Designed for use with text annotation."""
         newtier = self.getTier(name)
         seed = newtier[0]
         newIntervals = []
@@ -148,7 +152,6 @@ class Grid(object):
 
                 # Use copy(), otherwise intervals are passed by reference
                 seed = newtier[n].copy()
-
         newtier.resize(newIntervals)
 
     def confusionMatrixPair(self, tier1, tier2):
@@ -180,7 +183,7 @@ class Grid(object):
         self.printCMatrix(mat, filename)
 
     def printCMatrix(self, tbl, filename, sep='\t'):
-        """Prints a confusion matrix."""
+        """Prints a confusion matrix to be loaded by praat."""
         fout = codecs.open(filename, 'w', 'utf8')
         columns = ('A1', 'A2', 'Count')
         fout.write(sep.join(columns) + '\n')
@@ -216,7 +219,6 @@ class Grid(object):
         """Wrapper for Mace """
 
         self.maceTiers(tiernames, filename, sep=',')
-
         # outputs prediction and competence
         print('Running Mace ...')
         cmd = [macepath, filename]
@@ -310,7 +312,8 @@ class Grid(object):
 
     def intensityTier(self, praatscript, sndfile, outputdir=False,
                       downsample=False):
-
+    	"""Adds a Tier object containing intensity measuers in dB. Use with
+    	Praat Intensity 2 objects."""
         assert os.path.exists(praatscript) == True
         assert os.path.exists(sndfile) == True
 
@@ -341,7 +344,10 @@ class Grid(object):
 
     def pitchIntTier(self, praatscript, sndfile, outputdir=False,
                      downsample=False):
-
+    	"""Extracts the estimated pitch and intensity (amplitude) from a 
+    	praat Pitch 1 object. If arguments to this praat script and the
+    	praat script in self.hnrTier() are the same, the Interval objects will
+    	align."""
         assert os.path.exists(praatscript) == True
         assert os.path.exists(sndfile) == True
 

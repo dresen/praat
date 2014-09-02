@@ -1,6 +1,10 @@
 class Tier(object):
 
-    """docstring for Tier"""
+    """docstring for Tier
+    A class for a Praat Tier. The class supports extraction of new tiers from
+    existing Tiers and adding new Tiers from extracted Praat object as well as
+    transforms on the Interval objects that are stored in a Tier object. Also
+    implements a wrapper for Mace, to compute inter-annotator agreement etc."""
 
     def __init__(self, xmin, xmax, size, nid):
         super(Tier, self).__init__()
@@ -29,22 +33,28 @@ class Tier(object):
         return self.intervals[key]
 
     def addInterval(self, interval):
+    	"""Adds an Interval, adds an id and updates the Tier statistics"""
         self.intervals.append(interval)
         interval.id = len(self.intervals) - 1
         self.updateSize()
         self.typefreq[interval.text] = self.typefreq.get(interval.text, 0) + 1
 
     def resize(self, newIntervals):
+    	"""Updates Tier statistics if new Interval objects replace the existing
+    	Interval objects."""
         self.intervals = []
         for i in newIntervals:
             self.addInterval(i)
         self.size = len(self.intervals)
 
     def updateSize(self):
+    	"""Updates the size of the Tier"""
         self.currentsize = len(self.intervals)
         assert self.currentsize <= self.size
 
     def printGrid(self, filehandle):
+        """Print function called by a TextGrid object to output a complete TextGrid
+        Calls a similar functions on all Interval objects stored in the Tier."""
 
         header = ['class = "IntervalTier"',
                   'name = ' + self.id,
@@ -78,11 +88,12 @@ class Tier(object):
         return (interval1[0], interval2[0] + 1)
 
     def thresholdInterval(self, threshold, interval):
-
+    	"""Compares an Interval object with numeric annotation with a 
+    	threshold"""
         assert type(threshold) == float
 
         try:
-            return float(interval.text) > threshold
+            return float(interval.text.strip('"')) > threshold
         except:
             sys.exit("thresholdInterval(): Unable to compare " +
                      interval.text + " and " + str(threshold))
