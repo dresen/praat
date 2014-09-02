@@ -31,7 +31,7 @@ class Interval(object):
 		else:
 			return Interval(self.xmin, self.xmax, self.text)
 
-	def merge(self, other, replace=False):
+	def merge(self, other, replace=False, func=False):
 
 		if self.xmax == other.xmin:
 			left, right = self, other
@@ -41,6 +41,8 @@ class Interval(object):
 			sys.exit('Interval.merge(): boundary times do not match.')
 		if replace:
 			newtext = replace
+		elif func:
+			newtext = func(left.text, right.text)
 		else:
 			newtext = " ".join((left.text, right.text))
 
