@@ -33,22 +33,22 @@ class Tier(object):
         return self.intervals[key]
 
     def addInterval(self, interval):
-    	"""Adds an Interval, adds an id and updates the Tier statistics"""
+        """Adds an Interval, adds an id and updates the Tier statistics"""
         self.intervals.append(interval)
         interval.id = len(self.intervals) - 1
         self.updateSize()
         self.typefreq[interval.text] = self.typefreq.get(interval.text, 0) + 1
 
     def resize(self, newIntervals):
-    	"""Updates Tier statistics if new Interval objects replace the existing
-    	Interval objects."""
+        """Updates Tier statistics if new Interval objects replace the existing
+        Interval objects."""
         self.intervals = []
         for i in newIntervals:
             self.addInterval(i)
         self.size = len(self.intervals)
 
     def updateSize(self):
-    	"""Updates the size of the Tier"""
+        """Updates the size of the Tier"""
         self.currentsize = len(self.intervals)
         assert self.currentsize <= self.size
 
@@ -88,8 +88,8 @@ class Tier(object):
         return (interval1[0], interval2[0] + 1)
 
     def thresholdInterval(self, threshold, interval):
-    	"""Compares an Interval object with numeric annotation with a 
-    	threshold"""
+        """Compares an Interval object with numeric annotation with a
+        threshold"""
         assert type(threshold) == float
 
         try:

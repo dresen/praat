@@ -42,13 +42,13 @@ def parse(filehandle):
                 maxnCandidates = int(elems[1])
 
             elif elems[0] == 'intensity':
-            	# Iteration never returns here because intervalstart is True
+                # Iteration never returns here because intervalstart is True
                 intervalstart = True
                 intTier = Tier(xmin, xmax, size, '"Intensity"')
                 text = '"' + elems[1] + '"'
 
-            	# Set begin and end so they can be used in the next iteration
-            	# to set the first Interval for the pitch Tier
+                # Set begin and end so they can be used in the next iteration
+                # to set the first Interval for the pitch Tier
                 begin = 0.0
                 end = start
                 intTier.addInterval(Interval(begin, end, text))
@@ -79,8 +79,8 @@ def parse(filehandle):
                     candidates.append((freq, strength))
 
                 if len(candidates) == nc:
-                	# Candidate are ranked according to a decoding algorithm
-                	# First candidate is most likely, but we parse them all
+                        # Candidate are ranked according to a decoding algorithm
+                        # First candidate is most likely, but we parse them all
                     pitchTier.addInterval(
                         Interval(begin, end, '"' + str(candidates[0][0]) + '"'))
                     candidatestart = False

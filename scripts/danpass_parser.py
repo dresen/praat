@@ -49,9 +49,9 @@ block = ['"POS"', '"POS (reduceret tagset)"', '"fonemnotation"',
          '"tryk og tone"', '"fraseintonation"', '"kommentarer"',
          '"info-struktur"']
 
-data.hnrTier('scripts/f0-int-hnr_mono.psc', options.sound, downsample=16)
+data.hnrTier('f0-int-hnr_mono.psc', options.sound, downsample=16)
 #data.intensityTier('scripts/int-hnr_mono.psc', options.sound, downsample=16)
-data.pitchIntTier('scripts/f0-int-hnr_mono.psc', options.sound, downsample=16)
+data.pitchIntTier('f0-int-hnr_mono.psc', options.sound, downsample=16)
 
 # print(data)
 
@@ -60,7 +60,7 @@ data.prediction(data['"Harmonicity 2"'], '"stødpred"', '"ˀ"')
 data.printGrid(fout, block)
 
 # TODO:
-# 
+#
 
 
 #data.printGrid(fout, block)

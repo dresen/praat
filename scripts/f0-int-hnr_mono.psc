@@ -7,7 +7,6 @@ endform
   	fileName$ = stem$ + ".wav"
 
   	Read from file... 'path$'/'fileName$'
-	select Sound 'stem$'
 	Filter (pass Hann band)... 50 1000 100
 	select Sound 'stem$'
 	Remove

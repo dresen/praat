@@ -45,7 +45,7 @@ class Grid(object):
         return self.tidx[key]
 
     def keys(self):
-    	"""Returns a list of the names of the Tier objects in the Grid"""
+        """Returns a list of the names of the Tier objects in the Grid"""
         return self.tidx.keys()
 
     def addTier(self, newtier):
@@ -139,8 +139,8 @@ class Grid(object):
         self.mergeIntervals(name)
 
     def mergeIntervals(self, name):
-    	"""Merges Interval objects in a specific Tier that have the same 
-    	annotation. Designed for use with text annotation."""
+        """Merges Interval objects in a specific Tier that have the same
+        annotation. Designed for use with text annotation."""
         newtier = self.getTier(name)
         seed = newtier[0]
         newIntervals = []
@@ -312,8 +312,8 @@ class Grid(object):
 
     def intensityTier(self, praatscript, sndfile, outputdir=False,
                       downsample=False):
-    	"""Adds a Tier object containing intensity measuers in dB. Use with
-    	Praat Intensity 2 objects."""
+        """Adds a Tier object containing intensity measuers in dB. Use with
+        Praat Intensity 2 objects."""
         assert os.path.exists(praatscript) == True
         assert os.path.exists(sndfile) == True
 
@@ -344,10 +344,10 @@ class Grid(object):
 
     def pitchIntTier(self, praatscript, sndfile, outputdir=False,
                      downsample=False):
-    	"""Extracts the estimated pitch and intensity (amplitude) from a 
-    	praat Pitch 1 object. If arguments to this praat script and the
-    	praat script in self.hnrTier() are the same, the Interval objects will
-    	align."""
+        """Extracts the estimated pitch and intensity (amplitude) from a
+        praat Pitch 1 object. If arguments to this praat script and the
+        praat script in self.hnrTier() are the same, the Interval objects will
+        align."""
         assert os.path.exists(praatscript) == True
         assert os.path.exists(sndfile) == True
 
@@ -415,8 +415,7 @@ class Grid(object):
             elif float(hnrTier[i].text.strip('"')) > 20:
                 predTier.addInterval(hnrTier[i].copy(replace='""'))
             else:
-            	predTier.addInterval(hnrTier[i].copy(replace=annotation))
-
+                predTier.addInterval(hnrTier[i].copy(replace=annotation))
 
         self.addTier(predTier)
         self.mergeIntervals(tiername)
