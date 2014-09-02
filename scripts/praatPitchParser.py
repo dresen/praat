@@ -58,7 +58,7 @@ def parse(filehandle):
             if elems[0] == 'intensity':
                 begin = intTier[-1].xmax
                 end = begin + shift
-                amplitude = float(elems[1])
+                #amplitude = float(elems[1])
                 text = '"' + elems[1] + '"'
                 intTier.addInterval(Interval(begin, end, text))
                 candidates = []
@@ -77,19 +77,18 @@ def parse(filehandle):
                     #print(nc, len(candidates))
 
                 if len(candidates) == nc:
-                    if nc == 1:
-                        pitchTier.addInterval(
-                            Interval(begin, end,
-                                     '"' + str(candidates[0][0]) + '"'))
-                    elif amplitude < 0.03:
-                    	# Likely silent because of low amplitude
-                    	pitchTier.addInterval(
-                            Interval(begin, end, '"0.0"'))
-                    else:
-                        candidates = [x for x in candidates if x[0] < 600]
-                        winner = max(candidates, key=itemgetter(1))
-                        text = '"' + str(winner[0]) + '"'
-                        pitchTier.addInterval(Interval(begin, end, text))
+                    # if nc == 1:
+                    pitchTier.addInterval(
+                        Interval(begin, end, '"' + str(candidates[0][0]) + '"'))
+                    # elif amplitude < 0.03:
+                    # Likely silent because of low amplitude
+                    # 	pitchTier.addInterval(
+                    #         Interval(begin, end, '"0.0"'))
+                    # else:
+                    #     candidates = [x for x in candidates if x[0] < 600]
+                    #     winner = max(candidates, key=itemgetter(1))
+                    #     text = '"' + str(winner[0]) + '"'
+                    #     pitchTier.addInterval(Interval(begin, end, text))
                     candidatestart = False
 
     return (pitchTier, intTier)
