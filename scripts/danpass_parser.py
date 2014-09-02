@@ -1,16 +1,18 @@
 from praatparser import parse as gridParse
-import os, sys, codecs
+import os
+import sys
+import codecs
 import optparse
 
-
 parser = optparse.OptionParser()
-parser.add_option('-o', '--output', 
-                  dest="fout", 
-                  default="new_enhanced.TextGrid",
+parser.add_option('-o', '--output',
+                  dest="fout",
+                  default="../dp_mono/m_033_k.processed.TextGrid",
                   )
 parser.add_option('-s', '--sound',
                   dest="sound",
-                  default="Transvar_transuddrag.wav",
+                  action="store",
+                  default='../dp_mono/m_033_k.wav',
                   )
 parser.add_option('-t', '--table',
                   dest="soundtype_tbl",
@@ -19,39 +21,47 @@ parser.add_option('-t', '--table',
                   )
 parser.add_option('-i', '--input',
                   dest="fin",
-                  default='alle_segment_praatipa_renset.TextGrid',
-                 )
+                  default='../dp_mono/m_033_k.TextGrid',
+                  )
 
 options, remainder = parser.parse_args()
 
 print(options)
 
 try:
-	fin = codecs.open(options.fin, 'r', 'utf8')
-	fout = codecs.open(options.fout, 'w', 'utf8')
-	if options.soundtype_tbl:
-		tbl = codecs.open(options.soundtype_tbl, 'r', 'utf8')
-	else:
-		tbl = False
+    fin = codecs.open(options.fin, 'r', 'utf8')
+    fout = codecs.open(options.fout, 'w', 'utf8')
+    if options.soundtype_tbl:
+        tbl = codecs.open(options.soundtype_tbl, 'r', 'utf8')
+    else:
+        tbl = False
 except:
-	print("Unable to access all necessary files." )
-	sys.exit('Terminate.')
+    print("Unable to access all necessary files.")
+    sys.exit('Terminate.')
 
 data = gridParse(fin, os.path.abspath(options.fin), tbl)
 
 data.extractTier('"lydskrift"', '"stød-stavelse"', 'ˀ')
 data.extractSegmentTier(['"lydskrift"'], '"stød-kombineret"', 'ˀ')
-data.extractSegmentTier(['"lydskrift (ord-domæne)"'], '"stød-ord"', 'ˀ')
+#data.extractSegmentTier(['"lydskrift (ord-domæne)"'], '"stød-ord"', 'ˀ')
 
-block = ['"POS"', '"POS (reduceret tagset)"', '"fonemnotation"', 
-		'"tryk og tone"', '"fraseintonation"', '"kommentarer"',
-		'"info-struktur"']
+block = ['"POS"', '"POS (reduceret tagset)"', '"fonemnotation"',
+         '"tryk og tone"', '"fraseintonation"', '"kommentarer"',
+         '"info-struktur"']
 
-data.hnrTier('hnr_mono.psc', options.sound, downsample=16)
+data.hnrTier('scripts/f0-int-hnr_mono.psc', options.sound, downsample=16)
+#data.intensityTier('scripts/int-hnr_mono.psc', options.sound, downsample=16)
+data.pitchIntTier('scripts/f0-int-hnr_mono.psc', options.sound, downsample=16)
 
-print(data)
+# print(data)
 
-print(data.timeSliceTier(35))
+#print(data['"Pitch 1"'])
+data.prediction(data['"Harmonicity 2"'], '"stødpred"', '"ˀ"')
+data.printGrid(fout, block)
+
+# TODO:
+# 
+
 
 #data.printGrid(fout, block)
 
@@ -68,8 +78,8 @@ print(data.timeSliceTier(35))
 # 	def mkPath
 
 # 	def loadCorpus(self):
-# 		"""Loads the corpus. Here the corpus has been preprocessed so the 
-# 		TextGrids are in utf8 instead of utf16 or binary. The grids and wav 
+# 		"""Loads the corpus. Here the corpus has been preprocessed so the
+# 		TextGrids are in utf8 instead of utf16 or binary. The grids and wav
 # 		files are in the same directory too"""
 
 # 		if self.processedpath:
@@ -77,7 +87,7 @@ print(data.timeSliceTier(35))
 # 		else:
 # 			self.processedpath = self.mkPath(os.join(self.corpuspath, 'processed'))
 
-# 		# We do not want to overwrite data
+# We do not want to overwrite data
 # 		assert os.path.exists(self.processedpath) == False
 # 		os.mkdir(self.processedpath)
 
