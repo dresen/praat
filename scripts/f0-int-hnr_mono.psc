@@ -17,11 +17,6 @@ endform
 	select Pitch 'stem$'_band
 	Remove
 
-#	noprogress To Intensity... 75 0.005 yes
-#	Write to text file... 'outputdir$'/'stem$'_INT.dat
-#	select Intensity 'stem$'_band
-#	Remove
-
 	select Sound 'stem$'_band
 	noprogress To Harmonicity (cc)... 0.005 50 0.1 1.0
 	select Harmonicity 'stem$'_band
