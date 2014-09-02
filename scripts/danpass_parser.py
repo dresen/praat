@@ -7,12 +7,12 @@ import optparse
 parser = optparse.OptionParser()
 parser.add_option('-o', '--output',
                   dest="fout",
-                  default="new_enhanced.TextGrid",
+                  default="../dp_mono/m_033_k.processed.TextGrid",
                   )
 parser.add_option('-s', '--sound',
                   dest="sound",
                   action="store",
-                  default='Transvar_transuddrag.wav',
+                  default='../dp_mono/m_033_k.wav',
                   )
 parser.add_option('-t', '--table',
                   dest="soundtype_tbl",
@@ -21,7 +21,7 @@ parser.add_option('-t', '--table',
                   )
 parser.add_option('-i', '--input',
                   dest="fin",
-                  default='alle_segment_praatipa_renset.TextGrid',
+                  default='../dp_mono/m_033_k.TextGrid',
                   )
 
 options, remainder = parser.parse_args()

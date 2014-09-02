@@ -134,6 +134,9 @@ class Grid(object):
         else:
             self.extractTier(srcTiernames[0], name, symbol)
 
+        self.mergeIntervals(name)
+
+    def mergeIntervals(self, name):
         newtier = self.getTier(name)
         seed = newtier[0]
         newIntervals = []
@@ -410,6 +413,7 @@ class Grid(object):
 
 
         self.addTier(predTier)
+        self.mergeIntervals(tiername)
 
 
 
