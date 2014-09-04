@@ -1,7 +1,6 @@
 import codecs
 import os
 import subprocess
-from TextGrid import grid
 from praatparser import parse as gridParse
 
 
@@ -13,18 +12,31 @@ class DanPASS(object):
         super(DanPASS, self).__init__()
         self.corpuspath = corpuspath
         self.processedpath = outpath
-        self.loadCorpus()
-        self.data = {}
+        self.grids = {}
         self.ngrids = 0
+        self.loadCorpus(corpuspath)
+        
+    def __str__(self):
+        """Defining print function. Use for diagnostics"""
+        print("\nDanPASS info:")
+        print("Number of grids: ", self.ngrids)
+
+        print("\nCurrent tiers:\n")
+
+        for t in self.grids.keys():
+            print(self[t])
+
+        return ''
 
     def __getitem__(self, key):
         """Getter-method for textgrids"""
-        return self.data[key]
+        return self.grids[key]
 
-    def addGrid(self, filehandle, filepath):
+    def addGrid(self, filehandle, filepath, sndfile):
         """Setter-method for textgrids"""
         g = gridParse(filehandle, filepath)
-        self.data[grid.id] = grid
+        g.addWav(sndfile)
+        self.grids[g.id] = g
         self.ngrids += 1
 
     def rmGrid(self, grid):
@@ -39,9 +51,10 @@ class DanPASS(object):
         files = os.listdir(path)
         gridfiles = [x for x in files if os.path.splitext(x)[1] == '.TextGrid']
         wavs = [x for x in files if os.path.splitext(x)[1] == '.wav']
-        assert len(grids) == len(wavs)
+        assert len(gridfiles) == len(wavs)
 
-        for f in gridfiles:
-            p = os.path.abspath(f)
+        for f, w in zip (gridfiles, wavs):
+            p = os.path.join(path, f)
+            wav = os.path.join(path, w)
             fh = codecs.open(p, 'r', 'utf8')
-            self.addGrid(fh, p)
+            self.addGrid(fh, p, wav)

@@ -1,4 +1,4 @@
-from praatparser import parse as gridParse
+from Danpass import DanPASS
 import os
 import sys
 import codecs
@@ -7,21 +7,16 @@ import optparse
 parser = optparse.OptionParser()
 parser.add_option('-o', '--output',
                   dest="fout",
-                  default="../dp_mono/m_033_k.processed.TextGrid",
-                  )
-parser.add_option('-s', '--sound',
-                  dest="sound",
-                  action="store",
-                  default='../dp_mono/m_033_k.wav',
+                  default="danpass_out",
                   )
 parser.add_option('-t', '--table',
                   dest="soundtype_tbl",
                   default=False,
                   action="store",
                   )
-parser.add_option('-i', '--input',
+parser.add_option('-c', '--corpus',
                   dest="fin",
-                  default='../dp_mono/m_033_k.TextGrid',
+                  default='../dp_mono',
                   )
 
 options, remainder = parser.parse_args()
@@ -29,71 +24,34 @@ options, remainder = parser.parse_args()
 print(options)
 
 try:
-    fin = codecs.open(options.fin, 'r', 'utf8')
-    fout = codecs.open(options.fout, 'w', 'utf8')
-    if options.soundtype_tbl:
-        tbl = codecs.open(options.soundtype_tbl, 'r', 'utf8')
-    else:
-        tbl = False
-except:
-    print("Unable to access all necessary files.")
+    assert os.path.isdir(options.fin) == True
+except AssertionError:
+    print("Unable to access directory.")
     sys.exit('Terminate.')
 
-data = gridParse(fin, os.path.abspath(options.fin), tbl)
+data = DanPASS(os.path.abspath(options.fin))
 
-data.extractTier('"lydskrift"', '"stød-stavelse"', 'ˀ')
-data.extractSegmentTier(['"lydskrift"'], '"stød-kombineret"', 'ˀ')
-#data.extractSegmentTier(['"lydskrift (ord-domæne)"'], '"stød-ord"', 'ˀ')
+print(data)
 
-block = ['"POS"', '"POS (reduceret tagset)"', '"fonemnotation"',
-         '"tryk og tone"', '"fraseintonation"', '"kommentarer"',
-         '"info-struktur"']
+# data.extractTier('"lydskrift"', '"stød-stavelse"', 'ˀ')
+# data.extractSegmentTier(['"lydskrift"'], '"stød-kombineret"', 'ˀ')
+# #data.extractSegmentTier(['"lydskrift (ord-domæne)"'], '"stød-ord"', 'ˀ')
 
-data.hnrTier('f0-int-hnr_mono.psc', options.sound, downsample=16)
-#data.intensityTier('scripts/int-hnr_mono.psc', options.sound, downsample=16)
-data.pitchIntTier('f0-int-hnr_mono.psc', options.sound, downsample=16)
+# block = ['"POS"', '"POS (reduceret tagset)"', '"fonemnotation"',
+#          '"tryk og tone"', '"fraseintonation"', '"kommentarer"',
+#          '"info-struktur"']
 
-# print(data)
+# data.hnrTier('f0-int-hnr_mono.psc', options.sound, downsample=16)
+# #data.intensityTier('scripts/int-hnr_mono.psc', options.sound, downsample=16)
+# data.pitchIntTier('f0-int-hnr_mono.psc', options.sound, downsample=16)
 
-#print(data['"Pitch 1"'])
-data.prediction(data['"Harmonicity 2"'], '"stødpred"', '"ˀ"')
-data.printGrid(fout, block)
+# # print(data)
+
+# #print(data['"Pitch 1"'])
+# data.prediction(data['"Harmonicity 2"'], '"stødpred"', '"ˀ"')
+# data.printGrid(fout, block)
 
 # TODO:
 #
 
 
-#data.printGrid(fout, block)
-
-
-# class DanPASS(object):
-# 	"""docstring for DanPASS"""
-# 	def __init__(self, corpuspath, outpath=False):
-# 		super(DanPASS, self).__init__()
-# 		self.corpuspath = corpuspath
-# 		self.processedpath = outpath
-# 		self.mkPath(self.processedpath)
-# 		self.loadCorpus()
-
-# 	def mkPath
-
-# 	def loadCorpus(self):
-# 		"""Loads the corpus. Here the corpus has been preprocessed so the
-# 		TextGrids are in utf8 instead of utf16 or binary. The grids and wav
-# 		files are in the same directory too"""
-
-# 		if self.processedpath:
-# 			pass
-# 		else:
-# 			self.processedpath = self.mkPath(os.join(self.corpuspath, 'processed'))
-
-# We do not want to overwrite data
-# 		assert os.path.exists(self.processedpath) == False
-# 		os.mkdir(self.processedpath)
-
-
-
-# 		grids = [x for x in os.listdir(corpuspath) if 'TextGrid' in x]
-
-# 		for g in grids:
-# 			gridParse(os.join(corpuspath, g), )

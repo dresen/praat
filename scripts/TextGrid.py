@@ -15,7 +15,7 @@ class Grid(object):
     A class for storing a Praat TextGrid and performing data transformations
     and anlyses. """
 
-    def __init__(self, xmin, xmax, size, nid):
+    def __init__(self, xmin, xmax, size, nid, wav=False):
         super(Grid, self).__init__()
         self.xmin = xmin
         self.xmax = xmax
@@ -24,6 +24,7 @@ class Grid(object):
         self.id = nid
         self.resize()
         self.tidx = {}
+        self.wav = wav
 
     def __str__(self):
         """Defining print function. Use for diagnostics"""
@@ -37,7 +38,7 @@ class Grid(object):
         print("\nCurrent tiers:\n")
 
         for t in self.tiers:
-            print(t)
+            print(t.id)
 
         return ''
 
@@ -53,6 +54,11 @@ class Grid(object):
         self.tiers.append(newtier)
         self.tidx[newtier.id] = newtier
         self.resize()
+
+    def addWav(self, fp):
+        """Associate a wav file to the Grid object."""
+        assert os.path.exists(fp) == True
+        self.wav = fp
 
     def resize(self):
         """Update grid size."""
@@ -246,14 +252,19 @@ class Grid(object):
             tier.competence = comp[n]
             n += 1
 
-    def downsample(self, sndfile, samplerate=16):
+    def downsample(self, snd=False, samplerate=16):
         """Create a new file that is a downsampling of another file.
         Assumes that $sndfile is in a higher sampling rate than
         $samplerate."""
 
-        assert os.path.exists(sndfile) == True
-        stem, ext = os.path.splitext(sndfile)
+        if self.wav:
+            snd = self.wav
+        elif snd:
+            assert os.path.exists(snd) == True
+    
+        stem, ext = os.path.splitext(snd)
         assert ext == '.wav'
+
         s = str(samplerate)
         hz = s + 'k'
         newsound = stem + '_' + hz + ext
@@ -264,28 +275,32 @@ class Grid(object):
             subprocess.call(cmd)
         except OSError as e:
             if e.errno == os.errno.ENOENT:
-                sys.exit('Could not find ' + sndfile + '. Terminate.')
+                sys.exit('Could not find ' + snd + '. Terminate.')
             else:
                 print('Is SoX available on your system?')
-                sys.exit('Could not downsample ' + sndfile + '. Terminate.')
+                sys.exit('Could not downsample ' + snd + '. Terminate.')
 
-        return newsound
+        self.addWav(newsound)
 
-    def hnrTier(self, praatscript, sndfile, outputdir=False,
+    def hnrTier(self, praatscript, snd=False, outputdir=False,
                 downsample=False):
         """Extracts harmonics-to-noise ratio using Praat. Assumes that the user
         knows the number of channels and chooses and appropriate praat script.
         If you run out of memory, use self.downsample() and specify a lower
         samplerate."""
 
-        # Check arguments
-        assert os.path.exists(praatscript) == True
-        assert os.path.exists(sndfile) == True
+        if snd:
+            # Check arguments
+            assert os.path.exists(snd) == True
+            self.wav = snd
+        
         if downsample:
-            sndfile = self.downsample(sndfile, samplerate=downsample)
+            self.downsample(self.wav, samplerate=downsample)
+
+        assert os.path.exists(praatscript) == True
 
         # Create arguments for system call
-        path, filename = os.path.split(sndfile)
+        path, filename = os.path.split(self.wav)
         stem, ext = os.path.splitext(filename)
         assert ext == '.wav'
 
@@ -317,8 +332,16 @@ class Grid(object):
         assert os.path.exists(praatscript) == True
         assert os.path.exists(sndfile) == True
 
+        if snd:
+            # Check arguments
+            assert os.path.exists(snd) == True
+            self.wav = snd
+        
+        if downsample:
+            self.downsample(self.wav, samplerate=downsample)
+
         # Create arguments for system call
-        path, filename = os.path.split(sndfile)
+        path, filename = os.path.split(self.wav)
         stem, ext = os.path.splitext(filename)
         assert ext == '.wav'
 
@@ -349,10 +372,12 @@ class Grid(object):
         praat script in self.hnrTier() are the same, the Interval objects will
         align."""
         assert os.path.exists(praatscript) == True
-        assert os.path.exists(sndfile) == True
+        if sndfile:
+            assert os.path.exists(sndfile) == True
+            self.wav = sndfile
 
         # Create arguments for system call
-        path, filename = os.path.split(sndfile)
+        path, filename = os.path.split(self.wav)
         stem, ext = os.path.splitext(filename)
         assert ext == '.wav'
 
