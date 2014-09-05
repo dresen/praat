@@ -15,7 +15,7 @@ class Grid(object):
     A class for storing a Praat TextGrid and performing data transformations
     and anlyses. """
 
-    def __init__(self, xmin, xmax, size, nid, wav=False):
+    def __init__(self, xmin, xmax, size, nid, wav=False, outpath=False):
         super(Grid, self).__init__()
         self.xmin = xmin
         self.xmax = xmax
@@ -25,6 +25,7 @@ class Grid(object):
         self.resize()
         self.tidx = {}
         self.wav = wav
+        self.outpath = outpath
 
     def __str__(self):
         """Defining print function. Use for diagnostics"""
@@ -69,7 +70,12 @@ class Grid(object):
     def printGrid(self, filename, rmtiernames=[]):
         """Print function to output a TextGrid to load into praat."""
         if type(filename) == str:
-            fout = codecs.open(filename, 'w', 'utf8')
+            if self.outpath:
+                fout = codecs.open(
+                    os.path.join(self.outpath, filename), 'w', 'utf8')
+            else:
+                fout = codecs.open(filename, 'w', 'utf8')
+
         else:
             fout = filename
 
@@ -263,7 +269,7 @@ class Grid(object):
             assert os.path.exists(snd) == True
         else:
             snd = self.wav
-    
+
         stem, ext = os.path.splitext(snd)
         assert ext == '.wav'
 
@@ -295,7 +301,7 @@ class Grid(object):
             # Check arguments
             assert os.path.exists(snd) == True
             self.wav = snd
-        
+
         if downsample:
             self.downsample(self.wav, samplerate=downsample)
 
@@ -338,7 +344,7 @@ class Grid(object):
             # Check arguments
             assert os.path.exists(snd) == True
             self.wav = snd
-        
+
         if downsample:
             self.downsample(self.wav, samplerate=downsample)
 

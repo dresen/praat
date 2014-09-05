@@ -15,7 +15,12 @@ class DanPASS(object):
     def __init__(self, corpuspath, outpath=False):
         super(DanPASS, self).__init__()
         self.corpuspath = corpuspath
-        self.processedpath = outpath
+        if not outpath:
+            self.processedpath = self.setOutpath()
+        else:
+            self.processedpath = outpath
+        if not os.path.exists(self.processedpath):
+            os.mkdir(self.processedpath)
         self.grids = {}
         self.ngrids = 0
         self.pool = Pool(4)
@@ -37,6 +42,15 @@ class DanPASS(object):
         """Getter-method for textgrids"""
         return self.grids[key]
 
+    def setOutpath(self):
+        p = os.path.join(self.corpuspath, "processed")
+        return p
+
+    def printGrids(self, rmTiernames=[]):
+
+        for g in self.values():
+            g.printGrid(os.path.join(self.processedpath, g.id), rmTiernames)
+
     def keys(self):
         return self.grids.keys()
 
@@ -48,6 +62,7 @@ class DanPASS(object):
         if sndfile:
             textgrid.addWav(sndfile)
         self.grids[textgrid.id] = textgrid
+        textgrid.outpath = self.processedpath
         self.ngrids += 1
 
     def rmGrid(self, grid):
@@ -69,12 +84,6 @@ class DanPASS(object):
         # Heavy processing, so do it in parallel
         textgrids = self.pool.map(gridParse, gridfiles)
 
-        #print(str([os.path.split(x)[-1] for x in sorted(wavs)]))
-        #print(str([x.id for x in sorted(textgrids, key=attrgetter("id"))]))
-
-        #sys.exit()
-
-
         for n, g in enumerate(sorted(textgrids, key=attrgetter("id"))):
             self.addGrid(g, wavs[n])
 
@@ -90,31 +99,37 @@ class DanPASS(object):
         for g in self.values():
             g.extractSegmentTier(srcTiernames, name, symbol, majority)
 
-    def globalDownsample(self, samplerate=16):
+    def extractHnrTiers(self, praatscript, replace_snd=False, downsample=False):
+        for g in self.values():
+            g.hnrTier(praatscript, replace_snd, self.processedpath, downsample)
 
-        def func(snd):
-            s = str(samplerate)
-            hz = s + 'k'
-            stem, ext = os.path.splitext(snd)[0]
-            newsound = stem + '_' + hz + ext
-            cmd = ['sox', snd, '-r', hz, '-b', s, '-c', '1', newsound]
-            subprocess.call(cmd)
-            return newsound
-        grids = [x for x in self.values() if x.wav]
+    def pitchIntTiers(self, praatscript, sndfile, downsample=False):
+
+        for g in self.values():
+            g.pitchIntTier(
+                praatscript, sndfile, self.processedpath, downsample)
+
+    def globalDownsample(self, rate=16):
+
+        grids = self.values()
         wavs = [x.wav for x in grids]
+        
+        downsampled = sorted(self.pool.map(downsample16, wavs))
 
-        self.pool.map(func, wavs)
+        for g, w in zip(grids, downsampled):
+            fname = os.path.split(w)[-1]
+            newsound = os.path.join(self.processedpath, fname)
+            os.rename(w, newsound)
+            g.addWav(newsound)
 
 
 
+def downsample16(wav):
 
-    def hnrTiers(self, praatscript, snd=False, outputdir=False,
-                 downsample=False):
-        for g in self.values():
-            g.hnrTier(praatscript, snd, outputdir, downsample)
-
-    def pitchIntTiers(self, praatscript, sndfile, outputdir=False,
-                      downsample=False):
-
-        for g in self.values():
-            g.pitchIntTier(praatscript, sndfile, outputdir, downsample)
+        s = '16'
+        hz = s + 'k'
+        stem, ext = os.path.splitext(wav)
+        newsound = stem + '_' + hz + ext
+        cmd = ['sox', wav, '-r', hz, '-b', s, '-c', '1', newsound]
+        subprocess.call(cmd)
+        return newsound
