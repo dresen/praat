@@ -50,14 +50,11 @@ class DanPASS(object):
         converted to utf8 encoding using Praat. Only considers the monologues
         in this setup."""
         assert os.path.exists(path) == True
-
-        files = os.listdir(path)
+        path = os.path.abspath(path)
+        files = [os.path.join(path, x) for x in os.listdir(path)]
         gridfiles = [x for x in files if os.path.splitext(x)[1] == '.TextGrid']
         wavs = [x for x in files if os.path.splitext(x)[1] == '.wav']
         assert len(gridfiles) == len(wavs)
 
         for f, w in zip(gridfiles, wavs):
-            p = os.path.join(path, f)
-            wav = os.path.join(path, w)
-            fh = codecs.open(p, 'r', 'utf8')
-            self.addGrid(p, wav)
+            self.addGrid(f, w)
