@@ -33,11 +33,11 @@ class DanPASS(object):
         """Getter-method for textgrids"""
         return self.grids[key]
 
-    def addGrid(self, filepath, sndfile):
+    def addGrid(self, textgrid, sndfile=False):
         """Setter-method for textgrids"""
-        g = gridParse(filepath)
-        g.addWav(sndfile)
-        self.grids[g.id] = g
+        if sndfile:
+            textgrid.addWav(sndfile)
+        self.grids[textgrid.id] = textgrid
         self.ngrids += 1
 
     def rmGrid(self, grid):
@@ -56,5 +56,12 @@ class DanPASS(object):
         wavs = [x for x in files if os.path.splitext(x)[1] == '.wav']
         assert len(gridfiles) == len(wavs)
 
-        for f, w in zip(gridfiles, wavs):
-            self.addGrid(f, w)
+        pool = Pool(processes=4)
+
+        textgrids = pool.map(gridParse, gridfiles)
+        for n, g in enumerate(textgrids):
+            self.addGrid(g, wavs[n])
+
+
+        #for f, w in zip(gridfiles, wavs):
+        #    self.addGrid(f, w)
