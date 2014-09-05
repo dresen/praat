@@ -257,10 +257,10 @@ class Grid(object):
         Assumes that $sndfile is in a higher sampling rate than
         $samplerate."""
 
-        if self.wav:
-            snd = self.wav
-        elif snd:
+        if snd:
             assert os.path.exists(snd) == True
+        else:
+            snd = self.wav
     
         stem, ext = os.path.splitext(snd)
         assert ext == '.wav'
@@ -269,7 +269,7 @@ class Grid(object):
         hz = s + 'k'
         newsound = stem + '_' + hz + ext
 
-        cmd = ['sox', sndfile, '-r', hz, '-b', s, '-c', '1', newsound]
+        cmd = ['sox', snd, '-r', hz, '-b', s, '-c', '1', newsound]
 
         try:
             subprocess.call(cmd)
