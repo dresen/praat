@@ -2,6 +2,7 @@ import codecs
 import os
 import subprocess
 from praatparser import parse as gridParse
+from multiprocessing import Pool
 
 
 class DanPASS(object):
@@ -15,7 +16,7 @@ class DanPASS(object):
         self.grids = {}
         self.ngrids = 0
         self.loadCorpus(corpuspath)
-        
+
     def __str__(self):
         """Defining print function. Use for diagnostics"""
         print("\nDanPASS info:")
@@ -32,9 +33,9 @@ class DanPASS(object):
         """Getter-method for textgrids"""
         return self.grids[key]
 
-    def addGrid(self, filehandle, filepath, sndfile):
+    def addGrid(self, filepath, sndfile):
         """Setter-method for textgrids"""
-        g = gridParse(filehandle, filepath)
+        g = gridParse(filepath)
         g.addWav(sndfile)
         self.grids[g.id] = g
         self.ngrids += 1
@@ -45,7 +46,9 @@ class DanPASS(object):
         self.ngrids -= 1
 
     def loadCorpus(self, path):
-        """Loads a preprocessed version of DanPASS. The Textgrids have been converted to utf8 encoding using Praat."""
+        """Loads a preprocessed version of DanPASS. The Textgrids have been 
+        converted to utf8 encoding using Praat. Only considers the monologues
+        in this setup."""
         assert os.path.exists(path) == True
 
         files = os.listdir(path)
@@ -53,8 +56,8 @@ class DanPASS(object):
         wavs = [x for x in files if os.path.splitext(x)[1] == '.wav']
         assert len(gridfiles) == len(wavs)
 
-        for f, w in zip (gridfiles, wavs):
+        for f, w in zip(gridfiles, wavs):
             p = os.path.join(path, f)
             wav = os.path.join(path, w)
             fh = codecs.open(p, 'r', 'utf8')
-            self.addGrid(fh, p, wav)
+            self.addGrid(p, wav)

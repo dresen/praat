@@ -6,8 +6,8 @@ from TextGrid import Grid
 
 
 
-def parse(filehandle, filepath, tbl=False):
-
+def parse(filepath, tbl=False):
+	filehandle = codecs.open(filepath, 'r', 'utf8')
 	## Parsing the TextGrid
 
 	n = 0

@@ -39,7 +39,7 @@ except:
     print("Unable to access all necessary files.")
     sys.exit('Terminate.')
 
-data = gridParse(fin, os.path.abspath(options.fin), tbl)
+data = gridParse(os.path.abspath(options.fin), tbl)
 
 data.extractTier('"lydskrift"', '"stød-stavelse"', 'ˀ')
 data.extractSegmentTier(['"lydskrift"'], '"stød-kombineret"', 'ˀ')
@@ -60,6 +60,6 @@ data.prediction(data['"Harmonicity 2"'], '"stødpred"', '"ˀ"')
 data.printGrid(fout, block)
 
 # TODO:
-#
+
 
 
