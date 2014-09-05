@@ -198,6 +198,8 @@ class Grid(object):
 
     def printCMatrix(self, tbl, filename, sep='\t'):
         """Prints a confusion matrix to be loaded by praat."""
+        if self.outpath:
+            filename = os.path.join(self.outpath, filename)
         fout = codecs.open(filename, 'w', 'utf8')
         columns = ('A1', 'A2', 'Count')
         fout.write(sep.join(columns) + '\n')
@@ -276,6 +278,9 @@ class Grid(object):
         s = str(samplerate)
         hz = s + 'k'
         newsound = stem + '_' + hz + ext
+
+        if self.outpath:
+            newsound = os.path.join(self.outpath, newsound)
 
         cmd = ['sox', snd, '-r', hz, '-b', s, '-c', '1', newsound]
 

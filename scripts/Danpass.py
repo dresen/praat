@@ -109,11 +109,11 @@ class DanPASS(object):
             g.pitchIntTier(
                 praatscript, sndfile, self.processedpath, downsample)
 
-    def globalDownsample(self, rate=16):
+    def globalDownsample16(self):
 
-        grids = self.values()
+        grids = sorted(self.values(), key=attrgetter('id'))
         wavs = [x.wav for x in grids]
-        
+
         downsampled = sorted(self.pool.map(downsample16, wavs))
 
         for g, w in zip(grids, downsampled):

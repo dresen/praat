@@ -33,7 +33,7 @@ monologues = DanPASS(os.path.abspath(options.fin), )
 
 monologues.extractTiers('"lydskrift"', '"stød-stavelse"', 'ˀ')
 monologues.extractSegmentTiers(['"lydskrift"'], '"stød-kombineret"', 'ˀ')
-monologues.globalDownsample(16)
+monologues.globalDownsample16()
 #monologues.extractHnrTiers('f0-int-hnr_mono.psc', downsample=16)
 #monologues.pitchIntTiers('f0-int-hnr_mono.psc', options.sound, downsample=16)
 
