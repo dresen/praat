@@ -98,7 +98,7 @@ class Grid(object):
 
     def extractTier(self, srcTiername, name, symbol):
         """Extract a tier from another tier based on the
-        occurence of a substring. """
+        occurrence of a substring. """
 
         srcTier = self.getTier(srcTiername)
         tgtTier = Tier(srcTier.xmin, srcTier.xmax, srcTier.size, name)
@@ -112,7 +112,7 @@ class Grid(object):
 
     def extractMajorityTier(self, srcTiernames, name, symbol, majority):
         """Extract a tier from a set of tiers based on a majority vote of the
-        occurence of the substring in $symbol."""
+        occurr  ence of the substring in $symbol."""
 
         ntiers = len(srcTiernames)
 

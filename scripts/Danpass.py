@@ -3,6 +3,7 @@ import os
 import subprocess
 from praatparser import parse as gridParse
 from multiprocessing import Pool
+from TextGrid import Grid
 
 
 class DanPASS(object):
@@ -22,7 +23,7 @@ class DanPASS(object):
         print("\nDanPASS info:")
         print("Number of grids: ", self.ngrids)
 
-        print("\nCurrent tiers:\n")
+        print("\nCurrent grids:\n")
 
         for t in self.grids.keys():
             print(self[t])
@@ -32,6 +33,12 @@ class DanPASS(object):
     def __getitem__(self, key):
         """Getter-method for textgrids"""
         return self.grids[key]
+
+    def keys(self):
+        return self.grids.keys()
+
+    def values(self):
+        return self.grids.values()
 
     def addGrid(self, textgrid, sndfile=False):
         """Setter-method for textgrids"""
@@ -56,12 +63,32 @@ class DanPASS(object):
         wavs = [x for x in files if os.path.splitext(x)[1] == '.wav']
         assert len(gridfiles) == len(wavs)
 
+        # Heavy processing, so do it in parallel
         pool = Pool(processes=4)
-
         textgrids = pool.map(gridParse, gridfiles)
+
         for n, g in enumerate(textgrids):
             self.addGrid(g, wavs[n])
 
+    def extractTiers(self, srcTiername, name, symbol):
+        for g in self.values():
+            g.extractTier(srcTiername, name, symbol)
 
-        #for f, w in zip(gridfiles, wavs):
-        #    self.addGrid(f, w)
+    def extractMajorityTiers(self, srcTiernames, name, symbol, majority):
+        for g in self.values():
+            g.extractTier(srcTiername, name, symbol, majority)
+
+    def extractSegmentTiers(self, srcTiernames, name, symbol, majority=1):
+        for g in self.values():
+            g.extractSegmentTier(srcTiernames, name, symbol, majority)
+
+    def hnrTiers(self, praatscript, snd=False, outputdir=False,
+                 downsample=False):
+        for g in self.values():
+            g.hnrTier(praatscript, snd, outputdir, downsample)
+
+    def pitchIntTiers(self, praatscript, sndfile, outputdir=False,
+                      downsample=False):
+
+        for g in self.values():
+            g.pitchIntTier(praatscript, sndfile, outputdir, downsample)

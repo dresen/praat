@@ -29,9 +29,14 @@ except AssertionError:
     print("Unable to access directory.")
     sys.exit('Terminate.')
 
-data = DanPASS(os.path.abspath(options.fin))
+monologues = DanPASS(os.path.abspath(options.fin))
 
-print(data)
+monologues.extractTiers('"lydskrift"', '"stød-stavelse"', 'ˀ')
+monologues.extractSegmentTiers(['"lydskrift"'], '"stød-kombineret"', 'ˀ')
+#monologues.hnrTiers('f0-int-hnr_mono.psc', options.sound, downsample=16)
+#monologues.pitchIntTiers('f0-int-hnr_mono.psc', options.sound, downsample=16)
+
+print(monologues)
 
 # data.extractTier('"lydskrift"', '"stød-stavelse"', 'ˀ')
 # data.extractSegmentTier(['"lydskrift"'], '"stød-kombineret"', 'ˀ')
