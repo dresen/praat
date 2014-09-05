@@ -1,7 +1,9 @@
 import codecs
 import os
+import sys
 import subprocess
 from praatparser import parse as gridParse
+from operator import itemgetter, attrgetter
 from multiprocessing import Pool
 from TextGrid import Grid
 
@@ -16,6 +18,7 @@ class DanPASS(object):
         self.processedpath = outpath
         self.grids = {}
         self.ngrids = 0
+        self.pool = Pool(4)
         self.loadCorpus(corpuspath)
 
     def __str__(self):
@@ -23,7 +26,7 @@ class DanPASS(object):
         print("\nDanPASS info:")
         print("Number of grids: ", self.ngrids)
 
-        print("\nCurrent grids:\n")
+        print("\nCurrent grids:")
 
         for t in self.grids.keys():
             print(self[t])
@@ -60,14 +63,19 @@ class DanPASS(object):
         path = os.path.abspath(path)
         files = [os.path.join(path, x) for x in os.listdir(path)]
         gridfiles = [x for x in files if os.path.splitext(x)[1] == '.TextGrid']
-        wavs = [x for x in files if os.path.splitext(x)[1] == '.wav']
+        wavs = sorted([x for x in files if os.path.splitext(x)[1] == '.wav'])
         assert len(gridfiles) == len(wavs)
 
         # Heavy processing, so do it in parallel
-        pool = Pool(processes=4)
-        textgrids = pool.map(gridParse, gridfiles)
+        textgrids = self.pool.map(gridParse, gridfiles)
 
-        for n, g in enumerate(textgrids):
+        #print(str([os.path.split(x)[-1] for x in sorted(wavs)]))
+        #print(str([x.id for x in sorted(textgrids, key=attrgetter("id"))]))
+
+        #sys.exit()
+
+
+        for n, g in enumerate(sorted(textgrids, key=attrgetter("id"))):
             self.addGrid(g, wavs[n])
 
     def extractTiers(self, srcTiername, name, symbol):
@@ -81,6 +89,24 @@ class DanPASS(object):
     def extractSegmentTiers(self, srcTiernames, name, symbol, majority=1):
         for g in self.values():
             g.extractSegmentTier(srcTiernames, name, symbol, majority)
+
+    def globalDownsample(self, samplerate=16):
+
+        def func(snd):
+            s = str(samplerate)
+            hz = s + 'k'
+            stem, ext = os.path.splitext(snd)[0]
+            newsound = stem + '_' + hz + ext
+            cmd = ['sox', snd, '-r', hz, '-b', s, '-c', '1', newsound]
+            subprocess.call(cmd)
+            return newsound
+        grids = [x for x in self.values() if x.wav]
+        wavs = [x.wav for x in grids]
+
+        self.pool.map(func, wavs)
+
+
+
 
     def hnrTiers(self, praatscript, snd=False, outputdir=False,
                  downsample=False):

@@ -30,6 +30,8 @@ class Grid(object):
         """Defining print function. Use for diagnostics"""
         print("\nTextGrid info:")
         print("ID: ", self.id)
+        if self.wav:
+            print("Grid sound file: ", self.wav)
         print("Grid start: ", self.xmin)
         print("Grid end: ", self.xmax)
         print("Number of tiers: ", self.size)
