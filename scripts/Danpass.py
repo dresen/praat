@@ -3,8 +3,9 @@ import os
 import sys
 import subprocess
 from praatparser import parse as gridParse
+from praatNumericParser import parse as numParse
 from operator import itemgetter, attrgetter
-from multiprocessing import Pool, cpu_count
+from multiprocessing import Pool
 from TextGrid import Grid
 
 
@@ -24,7 +25,7 @@ class DanPASS(object):
         self.grids = {}
         self.ngrids = 0
         # Number of available cores are detected automatically
-        self.pool = Pool()
+        self.pool = Pool(6)
         self.loadCorpus(corpuspath)
 
     def __str__(self):
@@ -35,7 +36,7 @@ class DanPASS(object):
         print("\nCurrent grids:")
 
         for t in self.grids.keys():
-            print(self[t])
+            print(self[t].id)
 
         return ''
 
@@ -125,58 +126,65 @@ class DanPASS(object):
             g.addWav(newsound)
 
     def extractHnrTiers(self, praatscript, override=False, downsample=False):
+        """Computes harmonics-to-noise ratio using praat. Downsamples if 
+        specified, overwrites existing files if specified."""
         if downsample:
             self.globalDownsample16()
-
         assert os.path.exists(praatscript) == True
-        hnrfiles = []
         args = []
-        unprocessed = []
         for g in self.values():
             path, filename = os.path.split(g.wav)
             stem, ext = os.path.splitext(filename)
+
             # Set paths
             if path == '':
                 praatpath = '.'
             else:
                 praatpath = os.path.abspath(path)
 
-            hnrfile = os.path.join(self.processedpath, stem + '_HNR.dat')
-
-            # The computation is time consuming (~21m). If the file exists, do
-            # not repeat computation unless explicitly specified with $override
-            if os.path.exists(hnrfile) and override == False:
+            # The computation is time consuming (~21m/4 cores). If the file
+            # exists, do not repeat computation unless explicitly specified
+            # with $override
+            g.hnrfile = os.path.join(self.processedpath, stem + '_HNR.dat')
+            if os.path.exists(g.hnrfile) and override == False:
                 pass
             else:
-                unprocessed.append(g)
-                hnrfiles.append(hnrfile)
                 args.append([praatscript, praatpath, stem, self.processedpath])
 
-        if unprocessed == []:
-            pass
-        else:
-            processed = sorted(self.pool.map(hnrExtraction, args))
+        processedfiles = self.pool.map(hnrExtraction, args)
+
+        for g in self.values():
+            g.addTier(numParse(codecs.open(g.hnrfile, 'r', 'utf8')))
+
+#    def extractPitchIntTiers(self, praatscript, override=False, downsample=False):
+#        """Computes harmonics-to-noise ratio using praat. Downsamples if 
+#        specified, overwrites existing files if specified."""
+
 
 
 # Functions used by DanPASS
 # The computation handled in these functions are functions and not class
 # because the class methods cannot be pickled and therefore not passed to the
 # processing pool.
-
 def hnrExtraction(args):
     """Extracts the harmonics-to-noise tier information from a sound file and
     returns the name of the extracted hnr file. Computation is costly and
     therefore reports when a file has been processed."""
     cmd = ["praat"]
     cmd.extend(args)
-    subprocess.call(cmd)
+    ret = subprocess.call(cmd)
     hnrfile = os.path.join(args[-1], args[-2]) + '_HNR.dat'
+    try:
+        assert ret == 0
+    except AssertionError:
+        sys.exit("Processing of " + str(hnrfile) + " failed.")
     print("Processing of", hnrfile, "completed.")
     return hnrfile
 
 
 def downsample16(pair):
-    """Takes an input file and an output path and passes it to SoX"""
+    """Takes an input file and an output path and passes it to SoX. A few
+    samples are clipped."""
     wav, outpath = pair
     s = '16'
     hz = s + 'k'

@@ -36,8 +36,9 @@ monologues.extractSegmentTiers(['"lydskrift"'], '"stød-kombineret"', 'ˀ')
 monologues.globalDownsample16()
 monologues.extractHnrTiers('f0-int-hnr_mono.psc')
 #monologues.pitchIntTiers('f0-int-hnr_mono.psc', options.sound, downsample=16)
-
+monologues.printGrids()
 print(monologues)
+
 
 # data.extractTier('"lydskrift"', '"stød-stavelse"', 'ˀ')
 # data.extractSegmentTier(['"lydskrift"'], '"stød-kombineret"', 'ˀ')
