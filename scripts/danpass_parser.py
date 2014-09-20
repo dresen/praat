@@ -35,8 +35,18 @@ monologues.extractTiers('"lydskrift"', '"stød-stavelse"', 'ˀ')
 monologues.extractSegmentTiers(['"lydskrift"'], '"stød-kombineret"', 'ˀ')
 monologues.globalDownsample16()
 monologues.extractHnrTiers('f0-int-hnr_mono.psc')
-#monologues.pitchIntTiers('f0-int-hnr_mono.psc', options.sound, downsample=16)
-monologues.printGrids()
+monologues.extractPitchIntTiers('f0-int-hnr_mono.psc')
+data = monologues.MLdataFromTiers(['"Pitch 1"', '"Harmonicity 2"'], '"stød-stavelse"')
+
+dout = codecs.open("stoeddata.txt", 'w', 'utf8')
+for p in data:
+  dout.write("\t".join(p)+"\n")
+
+dout.close()
+block = ['"POS"', '"POS (reduceret tagset)"', '"fonemnotation"',
+         '"tryk og tone"', '"fraseintonation"', '"kommentarer"']
+
+monologues.printGrids(block)
 print(monologues)
 
 
@@ -44,9 +54,7 @@ print(monologues)
 # data.extractSegmentTier(['"lydskrift"'], '"stød-kombineret"', 'ˀ')
 # #data.extractSegmentTier(['"lydskrift (ord-domæne)"'], '"stød-ord"', 'ˀ')
 
-# block = ['"POS"', '"POS (reduceret tagset)"', '"fonemnotation"',
-#          '"tryk og tone"', '"fraseintonation"', '"kommentarer"',
-#          '"info-struktur"']
+
 
 # data.hnrTier('f0-int-hnr_mono.psc', options.sound, downsample=16)
 # #data.intensityTier('scripts/int-hnr_mono.psc', options.sound, downsample=16)

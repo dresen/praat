@@ -71,7 +71,7 @@ class Tier(object):
 
     def timedInterval(self, start, end=False):
         """Returns the interval at the specified time. The time boundaries will
-        rarely exectly match, so choose the minimum distance one. It is also
+        rarely exactly match, so choose the minimum distance one. It is also
         possible to give a time frame and be returned a larger set of Interval
         objects."""
 
@@ -86,6 +86,15 @@ class Tier(object):
             interval2 = interval1
 
         return (interval1[0], interval2[0] + 1)
+
+    def timedAnnotation(self, time):
+        """Returns the annotation at of a tier at that time"""
+
+        assert type(time) == float
+        tgtInterval = min(
+            enumerate(self.intervals), key=lambda x: abs(x[1].xmin - time))
+
+        return tgtInterval.text
 
     def thresholdInterval(self, threshold, interval):
         """Compares an Interval object with numeric annotation with a

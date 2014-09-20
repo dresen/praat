@@ -431,13 +431,18 @@ class Grid(object):
                 sys.exit("Cannot convert " + str(
                     start) + " to float. Terminate")
 
-        return self[tiername].timedInterval(start, end)
+        intervals = self[tiername].timedInterval(start, end)
+        return self[tiername][intervals[0]:intervals[1]]
+
+    def timeSliceTiers(self, srcTiernames, time):
+        """Returns a list with lists of Interval objects"""
+        return [self.timeSliceTier(t, time)[0] for t in srcTiernames]
 
     def prediction(self, srcTier, tiername, annotation):
         """Test to find places with no stød
         Conditions: silence
-                                +20 hnr
-                                ...
+                    20+ hnr
+                    ...
         """
         try:
             pitchTier = self['"Pitch 1"']
@@ -457,6 +462,25 @@ class Grid(object):
 
         self.addTier(predTier)
         self.mergeIntervals(tiername)
+
+    def MLdataFromTiers(self, tiernames, tgtTier, mapping={}):
+
+        data = []
+        longestTier = max([(self[x].size, x)
+                          for x in tiernames], key=itemgetter(0))[1]
+        tiernames.append(tgtTier)
+        n = 0
+        for i in self[longestTier]:
+            time = i.xmin + (i.xmax - i.xmin)/2.0
+            point = [x.text for x in self.timeSliceTiers(tiernames, time)]
+            try:
+                formattedPoint = [float(x.strip('"')) for x in point[:-1]]
+                formattedPoint.append(mapping.get(point[-1], 1))
+                data.append(formattedPoint)
+            except ValueError:
+                print(point)
+            
+        return data
 
 
 

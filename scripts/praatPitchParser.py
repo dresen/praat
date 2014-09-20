@@ -46,6 +46,7 @@ def parse(filehandle):
                 intervalstart = True
                 intTier = Tier(xmin, xmax, size, '"Intensity"')
                 text = '"' + elems[1] + '"'
+                intTier.shift = shift
 
                 # Set begin and end so they can be used in the next iteration
                 # to set the first Interval for the pitch Tier
@@ -53,6 +54,7 @@ def parse(filehandle):
                 end = start
                 intTier.addInterval(Interval(begin, end, text))
                 pitchTier = Tier(xmin, xmax, size, objectclass)
+                pitchTier.shift = shift
                 # Prepare candidate list for first Interval
                 # First iteration skips the intensity condition below
                 candidates.append((0, 0))
