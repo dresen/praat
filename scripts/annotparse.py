@@ -39,7 +39,7 @@ except:
 
 
 
-four = praatparser.parse(fin, os.path.abspath(options.fin), tbl)
+four = praatparser.parse(os.path.abspath(options.fin), tbl)
 
 segtiers = ['"IPA-1_segm"', '"IPA-2_segm"', '"IPA-3_segm"', '"IPA-4_segm"']
 
@@ -61,5 +61,5 @@ print(four.getTier('"Mace-prediction"'))
 block = ['"IPA-1"', '"IPA-2"', '"IPA-3"', '"IPA-4"', '"PoS"',
             '"accent_word"', '"accent_syllable"', '"phone_type_cons_vow"' ]
 
-four.printGrid(fout)
-four.printGrid('zt', block)
+four.printGrid(fout, block)
+#four.printGrid('zt', block)

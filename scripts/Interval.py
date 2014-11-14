@@ -1,4 +1,5 @@
 import sys
+from numpy import ndarray
 
 
 class Interval(object):
@@ -13,13 +14,18 @@ class Interval(object):
         self.xmax = xmax
         self.text = text
         self.id = ""
+        self.viewable = True
 
     def __str__(self):
         """Print function"""
         print("ID: ", self.id)
         print("Interval start: ", self.xmin)
         print("Interval end: ", self.xmax)
-        print("Annotation: ", self.text)
+        if self.viewable:
+            annot = str(self.text)
+        else:
+            annot = '""'
+        print("Annotation: ", annot)
 
         return ''
 
@@ -27,7 +33,7 @@ class Interval(object):
         """Print function called by a Tier object to output a complete TextGrid"""
         data = ['xmin = ' + str(self.xmin),
                 'xmax = ' + str(self.xmax),
-                'text = ' + self.text
+                'text = ' + str(self.text)
                         ]
         filehandle.write('\n'.join([" " * 12 + x for x in data]) + '\n')
 
@@ -39,7 +45,8 @@ class Interval(object):
             return Interval(self.xmin, self.xmax, self.text)
 
     def merge(self, other, replace=False, func=False):
-        """Merges adjacent Interval objects in a tier"""
+        """Merges adjacent Interval objects in a tier
+        Use custom function in $func if self.text is not a string"""
         if self.xmax == other.xmin:
             left, right = self, other
         elif other.xmax == self.xmin:
@@ -54,3 +61,9 @@ class Interval(object):
             newtext = " ".join((left.text, right.text))
 
         return Interval(left.xmin, right.xmax, newtext)
+
+    def getText(self):
+        if type(self.text) == ndarray:
+            return "\t".join([str(x) for x in self.text])
+        else:
+            return self.text

@@ -2,14 +2,16 @@ import codecs
 import os
 import sys
 import subprocess
+from Tier import Tier
 from praatparser import parse as gridParse
 from praatNumericParser import parse as numParse
 from praatPitchParser import parse as pitchParse
+from praatMfccParser import parse as mfccParse
 from operator import itemgetter, attrgetter
 from multiprocessing import Pool
-from numpy import asarray as npasarray
 from TextGrid import Grid
 
+SCRIPT = '[Danpass.py]: '
 
 class DanPASS(object):
 
@@ -46,14 +48,17 @@ class DanPASS(object):
         """Getter-method for textgrids"""
         return self.grids[key]
 
-    def setOutpath(self):
-        p = os.path.join(self.corpuspath, "processed")
+    def setOutpath(self, path=False):
+        if path:
+            p = os.path.join(self.corpuspath, path)
+        else:
+            p = os.path.join(self.corpuspath, "processed")
         return p
 
-    def printGrids(self, rmTiernames=[]):
-
+    def printGrids(self, filename=False, rmTiernames=[]):
         for g in self.values():
-            g.printGrid(os.path.join(self.processedpath, g.id), rmTiernames)
+            if filename:
+                g.printGrid(os.path.join(self.processedpath, filename), rmTiernames)
 
     def keys(self):
         return self.grids.keys()
@@ -152,15 +157,20 @@ class DanPASS(object):
             if os.path.exists(g.hnrfile) and override == False:
                 pass
             else:
-                args.append([praatscript, praatpath, stem, self.processedpath, suffix])
-
+                args.append(
+                    [praatscript, praatpath, stem, self.processedpath])
+        
+        if len(args) == 2:
+            processedfiles = featureExtraction(args[0])
+        else:
+            processedfiles = self.pool.map(featureExtraction, args)
         processedfiles = self.pool.map(featureExtraction, args)
 
         for g in self.values():
             g.addTier(numParse(codecs.open(g.hnrfile, 'r', 'utf8')))
 
     def extractPitchIntTiers(self, praatscript, override=False, downsample=False):
-        """Computes harmonics-to-noise ratio using praat. Downsamples if 
+        """Computes F0 using praat and extracts intensity too. Downsamples if 
         specified, overwrites existing files if specified."""
         suffix = '_PtR.dat'
         if downsample:
@@ -185,41 +195,108 @@ class DanPASS(object):
                 pass
             else:
                 # Pack arguments in a list. multiprocessing.pool.starmap was
-                # implemented in py3.3 which is not installed on current 
+                # implemented in py3.3 which is not installed on current
                 # Ubuntu LTS
-                args.append([praatscript, praatpath, stem, self.processedpath, suffix])
+                args.append(
+                    [praatscript, praatpath, stem, self.processedpath])
 
-        processedfiles = self.pool.map(featureExtraction, args)
+        if len(args) == 1:
+            processedfiles = featureExtraction(args[0])
+        else:
+            processedfiles = self.pool.map(featureExtraction, args)
 
         for g in self.values():
-            (pitchTier, intTier) = pitchParse(codecs.open(g.pitchfile, 'r', 'utf8'))
+            (pitchTier, intTier) = pitchParse(
+                codecs.open(g.pitchfile, 'r', 'utf8'))
             g.addTier(intTier)
             g.addTier(pitchTier)
 
-
-    def MLdataFromTiers(self, tgtTier, write=False):
-
-        mapping = {'""':0}
-
+    def extractMfccTiers(self, praatscript, override=False, downsample=False):
+        """Computes F0 using praat and extracts intensity too. Downsamples if 
+        specified, overwrites existing files if specified."""
+        suffix = '_MFCC.dat'
+        if downsample:
+            self.globalDownsample16()
+        assert os.path.exists(praatscript) == True
         args = []
+        for g in self.values():
+            path, filename = os.path.split(g.wav)
+            stem, ext = os.path.splitext(filename)
 
+            # Set paths
+            if path == '':
+                praatpath = '.'
+            else:
+                praatpath = os.path.abspath(path)
+
+            # The computation is time consuming (~21m/4 cores). If the file
+            # exists, do not repeat computation unless explicitly specified
+            # with $override
+            g.mfccfile = os.path.join(self.processedpath, stem + suffix)
+            if os.path.exists(g.mfccfile) and override == False:
+                pass
+            else:
+                # Pack arguments in a list. multiprocessing.pool.starmap was
+                # implemented in py3.3 which is not installed on current
+                # Ubuntu LTS
+                args.append(
+                    [praatscript, praatpath, stem, self.processedpath])
+
+        if len(args) == 1:
+            processedfiles = featureExtraction(args[0])
+        else:
+            processedfiles = self.pool.map(featureExtraction, args)
+
+        for g in self.values():
+            mfccTier = mfccParse(
+                codecs.open(g.mfccfile, 'r', 'utf8'))
+            g.addTier(mfccTier)
+
+    def MLdataFromTiers(self, tgtTier, write=False, tbl_id=False):
+        """Method to convert information in Tier objects to vectors for
+        training ML models. The source Tiers that provide training data is
+        hard-coded because they need special treatment."""
+        args = []
         grids = self.values()
         for g in grids:
-            args.append((g, tgtTier, mapping))
+            args.append((g, tgtTier))
         datatbls = self.pool.map(alignDataFromTiers, args)
-
+        print(SCRIPT + "Data resegmentation complete", "...")
         assert len(grids) == len(datatbls)
+        if tbl_id == False:
+            tbl_id = ''
+        elif tbl_id[0] == '"' and tbl_id[-1] == '"':
+            # if tbl_id is a Tier name
+            tbl_id = '.' + tbl_id[1:-1]
+        else:
+            # base case
+            tbl_id = '.' + tbl_id
 
         if write:
             writeArgs = []
             for tbl, g in zip(datatbls, grids):
-                path = os.path.join(self.processedpath, os.path.splitext(g.id)[0] + '.tbl')
-                #writeTable((tbl, path))
+                path = os.path.join(self.processedpath, 
+                           os.path.splitext(g.id)[0] + tbl_id + '.tbl')
                 writeArgs.append((tbl, path))
             res = self.pool.map(writeTable, writeArgs)
         else:
             for tbl, g in zip(datatbls, grids):
                 g.mltbl = tbl
+
+    def splitAnnotation(self, srcTiername, tgtTiername):
+        """Method that splits annotation in Interval objects"""
+        args = [(x, srcTiername, tgtTiername) for x in self.values()]
+        res = self.pool.map(splitSyllables, args)
+        for g, t in zip(self.values(), res):
+            g.addTier(t)
+
+    def addMLTier(self, gridname, tgtTiername, tblfile, duration=0.005, mapping=False):
+        """Adds a new tier to a named grid from a table file. The table file
+        is usually output from a ML algorithm but can be any list"""
+        assert os.path.exists(tblfile) == True
+        self[gridname].loadPrediction(tblfile, tgtTiername, 
+            duration=duration, mapping=mapping)
+
 
 
 # Functions used by DanPASS class
@@ -227,23 +304,39 @@ class DanPASS(object):
 # because the class methods cannot be pickled and therefore not passed to the
 # processing pool.
 
+def splitSyllables(args):
+    """Splits annotation of Interval objects. Currently configured for DanPASS
+    annotation."""
+    glueleft = set([':', 'ˀ', '̩', 'ː', '̯ˀ', '̯'])
+    glueright = set(["'", 'ˈ'])
+    grid, src, tgt = args
+    srcTier = grid[src]
+    tgtIntervals = srcTier.splitText(tgt, glueleft, glueright)
+    tgtTier = Tier(srcTier.xmin, srcTier.xmax, len(tgtIntervals), tgt)
+    tgtTier.resize(tgtIntervals)
+    return tgtTier
+
+
 def alignDataFromTiers(args):
-    grid, tgtTiername, mapping = args
-    names = ['"Harmonicity 2"', tgtTiername]
+    """Splits and aligns data int tiers so the segmentation is identical. """
+    grid, tgtTiername = args
+    print(SCRIPT + "Aligning", grid.id + ".")
+    names = ['"Harmonicity 2"', '"MFCC"', tgtTiername]
     data = []
     for i, j in zip(grid['"Pitch 1"'], grid['"Intensity"']):
-        point = [str(i.xmin), str(i.xmax), i.text, j.text ]
-        othertiers = [x.text for x in grid.timeSliceTiers(names, i.xmin)]
+        point = [str(i.xmin), str(i.xmax), i.text, j.text]
+        othertiers = [x.getText() for x in grid.timeSliceTiers(names, i.xmin)]
         data.append(point + othertiers)
     return data
 
+
 def writeTable(args):
+    """Writes the data tables extracted from Tier objects to file."""
     list_of_lists, path = args
     gdata = codecs.open(path, 'w', 'utf8')
     for l in list_of_lists:
         gdata.write('\t'.join(l) + "\n")
     gdata.close()
-
 
 
 def featureExtraction(args):
@@ -253,12 +346,12 @@ def featureExtraction(args):
     cmd = ["praat"]
     cmd.extend(args)
     ret = subprocess.call(cmd)
-    featurefile = os.path.join(args[-1], args[-2]) + cmd.pop()
+    featurefile = os.path.join(args[-1], args[-2])
     try:
         assert ret == 0
     except AssertionError:
-        sys.exit("Processing of " + str(featurefile) + " failed.")
-    print("Processing of", featurefile, "completed.")
+        sys.exit(SCRIPT + "Processing of " + str(featurefile) + " failed.")
+    print(SCRIPT + "Processing of", featurefile, "completed.")
     return featurefile
 
 

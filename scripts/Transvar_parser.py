@@ -4,56 +4,53 @@ import sys
 import codecs
 import optparse
 
+SCRIPT = '[Transvar_parser.py]: '
+
 parser = optparse.OptionParser()
 parser.add_option('-o', '--output',
                   dest="fout",
-                  default="transvar_out",
+                  default="transvar_out/ml",
                   )
 parser.add_option('-t', '--table',
                   dest="soundtype_tbl",
                   default=False,
                   action="store",
                   )
+parser.add_option('-p', '--praatscript',
+                  dest="psc",
+                  default='f0-int-hnr_mono5ms.psc',
+                  action="store",
+                  )
 parser.add_option('-c', '--corpus',
                   dest="fin",
-                  default='../transvar/processed',
+                  default='../transvar/processed/',
                   )
 
 options, remainder = parser.parse_args()
 
-print(options)
-
 try:
     assert os.path.isdir(options.fin) == True
 except AssertionError:
-    print("Unable to access directory.")
+    print(SCRIPT, "Unable to access directory.")
     sys.exit('Terminate.')
 
 path = os.path.abspath(options.fin)
-monologues = DanPASS(path, os.path.join(path, options.fout))
-print(monologues)
+transvar = DanPASS(path, os.path.join(path, options.fout))
+print(SCRIPT, transvar)
 
-monologues.globalDownsample16()
-print("Downsampling done")
-monologues.extractTiers('"Mace-prediction"', '"Mace-stød"', 'ˀ')
-print("Tier extracted", "...")
-monologues.extractHnrTiers('f0-int-hnr_mono.psc')
-monologues.extractPitchIntTiers('f0-int-hnr_mono.psc')
+transvar.globalDownsample16()
+print(SCRIPT, "Downsampling done")
+transvar.extractTiers('"Mace-prediction"', '"Mace-stød"', 'ˀ')
+print(SCRIPT, "Tier extracted", "...")
+transvar.extractHnrTiers(options.psc)
+transvar.extractPitchIntTiers(options.psc)
 
-annotations = ['"stødtier"', '"maj"', '"equal"', '"Mace-stød"', '"all"']
-
-#for a in annotations:
-  #monologues.setOutpath(a[1:-1])
-monologues.MLdataFromTiers('"Mace-stød"', write=True, tbl_id="Mace-stød")
+annotations = ['"stødtier"', '"maj"', '"equal"', '"Mace-stød"', '"all"', '"Mace-prediction"']
+for a in annotations:
+  transvar.MLdataFromTiers(a, write=True, tbl_id=a)
 print("New ML data written to files", "...")
 
-# The original outpath
-#monologues.setOutpath(os.path.join(path, options.fout))
-#block = []
-#monologues.printGrids(block)
-#print(monologues)
+#transvar.addMLTier('Transvar_transuddrag.TextGrid', '"NB"', '../predictions/NB.pred.tbl')
 
-# TODO:
-#
-
+#transvar.printGrids()
 

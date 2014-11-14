@@ -1,6 +1,10 @@
+from Interval import Interval
+import sys
+
+
 class Tier(object):
 
-    """docstring for Tier
+    """
     A class for a Praat Tier. The class supports extraction of new tiers from
     existing Tiers and adding new Tiers from extracted Praat object as well as
     transforms on the Interval objects that are stored in a Tier object. Also
@@ -37,7 +41,8 @@ class Tier(object):
         self.intervals.append(interval)
         interval.id = len(self.intervals) - 1
         self.updateSize()
-        self.typefreq[interval.text] = self.typefreq.get(interval.text, 0) + 1
+        if type(interval.text) == str:
+            self.typefreq[interval.text] = self.typefreq.get(interval.text, 0) + 1
 
     def resize(self, newIntervals):
         """Updates Tier statistics if new Interval objects replace the existing
@@ -50,7 +55,12 @@ class Tier(object):
     def updateSize(self):
         """Updates the size of the Tier"""
         self.currentsize = len(self.intervals)
-        assert self.currentsize <= self.size
+        try:
+            assert self.currentsize <= self.size
+        except AssertionError:
+            print(self.currentsize)
+            print(self.size)
+            sys.exit('[', sys.arg[0] + ']: Size problem')
 
     def printGrid(self, filehandle):
         """Print function called by a TextGrid object to output a complete TextGrid
@@ -106,3 +116,59 @@ class Tier(object):
         except:
             sys.exit("thresholdInterval(): Unable to compare " +
                      interval.text + " and " + str(threshold))
+
+    def splitText(self, newTiername, glueleft, glueright):
+        newIntervals = []
+        for i in self.intervals:
+            if i.text.strip() == '""' or i.viewable == False:
+                # if viewable is False, i.text likely contains a list or array
+                newIntervals.append(i.copy())
+                continue
+            letters = [x for x in i.text[1:-1]]
+            newtext = []
+            try:
+                first = letters.pop(0)
+            except IndexError:
+                # Some thing in the formatting of the annotation is wrong
+                newIntervals.append(i.copy(replace='""'))
+                continue
+
+            if first in glueright:
+                first = first + letters.pop(0)
+            mente = ''
+            for l in letters:
+                if mente != '':
+                    # prefix current letter
+                    first = mente + l
+                    mente = ''
+                elif l in glueleft:
+                    # Append to first
+                    first += l
+                elif l in glueright:
+                    # If $l is a prefix
+                    mente = l
+                    newtext.append(first)
+                    first = l
+                else:
+                    # Base case
+                    newtext.append(first)
+                    first = l
+            newtext.append(first)
+            intervalDuration = i.xmax - i.xmin
+            if len(newtext) <= 1:
+                newIntervals.append(i.copy(replace='"' + newtext[0] + '"'))
+                continue
+            else:
+                halfPhoneCount = len(newtext) * 2 + letters.count(
+                    ':') + letters.count('ː')
+                halfPhoneDuration = intervalDuration / halfPhoneCount
+
+            xmin = i.xmin
+            for phone in newtext:
+                xmax = xmin + halfPhoneDuration * 2
+                if ':' in phone or 'ː' in phone:
+                    xmax += halfPhoneDuration
+                newIntervals.append(Interval(xmin, xmax, '"' + phone + '"'))
+                xmin = xmax
+
+        return newIntervals

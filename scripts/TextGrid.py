@@ -1,6 +1,7 @@
 import codecs
 import os
 import subprocess
+import sys
 from Tier import Tier
 from Interval import Interval
 from operator import itemgetter, attrgetter
@@ -8,12 +9,13 @@ from numpy import array as nparray
 from praatNumericParser import parse as numParse
 from praatPitchParser import parse as pitchParse
 
+SCRIPT = '[TextGrid.py]: '
 
 class Grid(object):
 
-    """docstring for Grid
+    """
     A class for storing a Praat TextGrid and performing data transformations
-    and anlyses. """
+    and analyses. """
 
     def __init__(self, xmin, xmax, size, nid, wav=False, outpath=False):
         super(Grid, self).__init__()
@@ -236,10 +238,10 @@ class Grid(object):
 
         self.maceTiers(tiernames, filename, sep=',')
         # outputs prediction and competence
-        print('Running Mace ...')
+        print(SCRIPT+ 'Running Mace ...')
         cmd = [macepath, filename]
         subprocess.call(cmd, stderr=subprocess.DEVNULL)
-        print('Mace terminated.')
+        print(SCRIPT + 'Mace terminated.')
 
         template = self.getTier(tiernames[0])
         macetier = Tier(template.xmin, template.xmax,
@@ -288,10 +290,10 @@ class Grid(object):
             subprocess.call(cmd)
         except OSError as e:
             if e.errno == os.errno.ENOENT:
-                sys.exit('Could not find ' + snd + '. Terminate.')
+                sys.exit(SCRIPT + 'Could not find ' + snd + '. Terminate.')
             else:
-                print('Is SoX available on your system?')
-                sys.exit('Could not downsample ' + snd + '. Terminate.')
+                print(SCRIPT + 'Is SoX available on your system?')
+                sys.exit(SCRIPT + 'Could not downsample ' + snd + '. Terminate.')
 
         self.addWav(newsound)
 
@@ -418,20 +420,21 @@ class Grid(object):
 
     def timeSliceTier(self, tiername, start, end=False):
         """Finds the Interval object(s) at the specified time (interval)"""
-
         try:
             start = float(start)
             if end:
                 end = float(end)
         except:
             if end:
-                sys.exit("Cannot convert " + str(start) +
+                sys.exit(SCRIPT + "Cannot convert " + str(start) +
                          " and " + str(end) + " to floats. Terminate")
             else:
-                sys.exit("Cannot convert " + str(
+                sys.exit(SCRIPT + "Cannot convert " + str(
                     start) + " to float. Terminate")
-
-        intervals = self[tiername].timedInterval(start, end)
+        try:
+            intervals = self[tiername].timedInterval(start, end)
+        except TypeError:
+            sys.exit(SCRIPT + "Cannot retrieve ", tiername)
         return self[tiername][intervals[0]:intervals[1]]
 
     def timeSliceTiers(self, srcTiernames, time):
@@ -463,26 +466,26 @@ class Grid(object):
         self.addTier(predTier)
         self.mergeIntervals(tiername)
 
-    def MLdataFromTiers(self, tiernames, tgtTier, mapping={}):
+    def loadPrediction(self, filepath, tiername, mapping=False, 
+                        duration=0.005):
+        try:
+            fh = codecs.open(filepath, 'r', 'utf8').readlines()
+        except OSError:
+            sys.exit(SCRIPT + 'Cannot find file at ' + filepath)
 
-        data = []
-        longestTier = max([(self[x].size, x)
-                          for x in tiernames], key=itemgetter(0))[1]
-        tiernames.append(tgtTier)
-        n = 0
-        for i in self[longestTier]:
-            time = i.xmin + (i.xmax - i.xmin)/2.0
-            point = [x.text for x in self.timeSliceTiers(tiernames, time)]
-            try:
-                formattedPoint = [float(x.strip('"')) for x in point[:-1]]
-                formattedPoint.append(mapping.get(point[-1], 1))
-                data.append(formattedPoint)
-            except ValueError:
-                print(point)
-            
-        return data
+        if not type(mapping) == dict:
+            mapping = {'0': '""', '1': '"\^?"'}
 
+        predtier = Tier(self.xmin, self.xmax, len(fh), tiername)
 
+        now = float(self.xmin)
+        for line in fh:
+            annotation = line.strip()
+            predtier.addInterval(Interval(now, now+duration, 
+                mapping.get(annotation, '""')))
+            now += duration
+
+        self.addTier(predtier)
 
 
 # TODO:
