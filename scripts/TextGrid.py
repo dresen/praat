@@ -106,6 +106,22 @@ class Grid(object):
         Replaced by the __getitem__() function, but kept for convenience"""
         return self.tidx[name]
 
+    def extractKaldiData(self, textTierName, recid):
+        """Extract segments, uttids and text from the tier that contins text"""
+        tier = self.tidx[textTierName]
+        id_length = len(str(tier.size))
+        text = []
+        segments = []
+        uttids = []
+
+        for interval in tier.intervals:
+            uttids.append('-'.join((recid, str(interval.id).zfill(id_length))))
+            text.append(interval.getText())
+            segments.append('{:0.3f} {:1.3f}'.format(interval.xmin,
+                                                     interval.xmax)
+                                                     )
+        return (uttids, segments, text, self.wav)
+
     def extractTier(self, srcTiername, name, symbol):
         """Extract a tier from another tier based on the
         occurrence of a substring. """
@@ -466,7 +482,7 @@ class Grid(object):
         self.addTier(predTier)
         self.mergeIntervals(tiername)
 
-    def loadPrediction(self, filepath, tiername, mapping=False, 
+    def loadPrediction(self, filepath, tiername, mapping=False,
                         duration=0.005):
         try:
             fh = codecs.open(filepath, 'r', 'utf8').readlines()
@@ -481,7 +497,7 @@ class Grid(object):
         now = float(self.xmin)
         for line in fh:
             annotation = line.strip()
-            predtier.addInterval(Interval(now, now+duration, 
+            predtier.addInterval(Interval(now, now+duration,
                 mapping.get(annotation, '""')))
             now += duration
 

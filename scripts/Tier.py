@@ -117,6 +117,7 @@ class Tier(object):
             sys.exit("thresholdInterval(): Unable to compare " +
                      interval.text + " and " + str(threshold))
 
+
     def splitText(self, newTiername, glueleft, glueright):
         newIntervals = []
         for i in self.intervals:

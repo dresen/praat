@@ -10,6 +10,7 @@ from praatMfccParser import parse as mfccParse
 from operator import itemgetter, attrgetter
 from multiprocessing import Pool
 from TextGrid import Grid
+from re import sub
 
 SCRIPT = '[Danpass.py]: '
 
@@ -80,7 +81,7 @@ class DanPASS(object):
         self.ngrids -= 1
 
     def loadCorpus(self, path):
-        """Loads a preprocessed version of DanPASS. The Textgrids have been 
+        """Loads a preprocessed version of DanPASS. The Textgrids have been
         converted to utf8 encoding using Praat. Only considers the monologues
         in this setup."""
         assert os.path.exists(path) == True
@@ -95,6 +96,51 @@ class DanPASS(object):
 
         for n, g in enumerate(sorted(textgrids, key=attrgetter("id"))):
             self.addGrid(g, wavs[n])
+
+    def printKaldiData(self, path):
+        text = []
+        segments = []
+        wav_scp = []
+        utt2spk = []
+        spk2utt_map = {}
+
+        for g in self.values():
+            recid = os.path.splitext(g.id)[0]
+            spkid = recid.rsplit('_', 1)[0]
+            gUttids, gSegments, gText, wav = g.extractKaldiData('"ortografi"',
+                                                                recid)
+            if spkid not in spk2utt_map:
+                spk2utt_map[spkid] = []
+            wav_scp.append(' '.join((recid, wav)) + '\n')
+            for i in range(len(gUttids)):
+                uttid = gUttids[i]
+                clean_text = sub('[ =,\"+\-]', '', gText[i])
+                clean_text = clean_text.replace('_', ' ').strip()
+                if clean_text == '':
+                    continue
+                text.append(' '.join((uttid, clean_text.lower())) + '\n')
+                segments.append(' '.join((uttid, recid, gSegments[i])) + '\n')
+                utt2spk.append(' '.join((uttid, spkid)) + '\n')
+                spk2utt_map[spkid].append(uttid)
+
+        spk2utt = ["{0} {1}\n".format(x[0], ' '.join(x[1])) for x in spk2utt_map.items()]
+
+
+        fout = open(os.path.join(path, 'text'), 'w')
+        fout.writelines(sorted(text))
+        fout.close()
+        fout = open(os.path.join(path, 'segments'), 'w')
+        fout.writelines(sorted(segments))
+        fout.close()
+        fout = open(os.path.join(path, 'wav.scp'), 'w')
+        fout.writelines(sorted(wav_scp))
+        fout.close()
+        fout = open(os.path.join(path, 'utt2spk'), 'w')
+        fout.writelines(sorted(utt2spk))
+        fout.close()
+        fout = open(os.path.join(path, 'spk2utt'), 'w')
+        fout.writelines(sorted(spk2utt))
+        fout.close()
 
     def extractTiers(self, srcTiername, name, symbol):
         """Calls the same extractTier method on all grids in the object"""
@@ -112,7 +158,7 @@ class DanPASS(object):
             g.extractSegmentTier(srcTiernames, name, symbol, majority)
 
     def pitchIntTiers(self, praatscript, sndfile, downsample=False):
-        """Calls the same pitchIntTier method on all grids in the object. Should be 
+        """Calls the same pitchIntTier method on all grids in the object. Should be
         parallelised"""
         for g in self.values():
             g.pitchIntTier(
@@ -133,7 +179,7 @@ class DanPASS(object):
             g.addWav(newsound)
 
     def extractHnrTiers(self, praatscript, override=False, downsample=False):
-        """Computes harmonics-to-noise ratio using praat. Downsamples if 
+        """Computes harmonics-to-noise ratio using praat. Downsamples if
         specified, overwrites existing files if specified."""
         suffix = '_HNR.dat'
         if downsample:
@@ -159,7 +205,7 @@ class DanPASS(object):
             else:
                 args.append(
                     [praatscript, praatpath, stem, self.processedpath])
-        
+
         if len(args) == 2:
             processedfiles = featureExtraction(args[0])
         else:
@@ -170,7 +216,7 @@ class DanPASS(object):
             g.addTier(numParse(codecs.open(g.hnrfile, 'r', 'utf8')))
 
     def extractPitchIntTiers(self, praatscript, override=False, downsample=False):
-        """Computes F0 using praat and extracts intensity too. Downsamples if 
+        """Computes F0 using praat and extracts intensity too. Downsamples if
         specified, overwrites existing files if specified."""
         suffix = '_PtR.dat'
         if downsample:
@@ -212,7 +258,7 @@ class DanPASS(object):
             g.addTier(pitchTier)
 
     def extractMfccTiers(self, praatscript, override=False, downsample=False):
-        """Computes F0 using praat and extracts intensity too. Downsamples if 
+        """Computes F0 using praat and extracts intensity too. Downsamples if
         specified, overwrites existing files if specified."""
         suffix = '_MFCC.dat'
         if downsample:
@@ -275,7 +321,7 @@ class DanPASS(object):
         if write:
             writeArgs = []
             for tbl, g in zip(datatbls, grids):
-                path = os.path.join(self.processedpath, 
+                path = os.path.join(self.processedpath,
                            os.path.splitext(g.id)[0] + tbl_id + '.tbl')
                 writeArgs.append((tbl, path))
             res = self.pool.map(writeTable, writeArgs)
@@ -294,7 +340,7 @@ class DanPASS(object):
         """Adds a new tier to a named grid from a table file. The table file
         is usually output from a ML algorithm but can be any list"""
         assert os.path.exists(tblfile) == True
-        self[gridname].loadPrediction(tblfile, tgtTiername, 
+        self[gridname].loadPrediction(tblfile, tgtTiername,
             duration=duration, mapping=mapping)
 
 

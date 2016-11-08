@@ -9,7 +9,7 @@ SCRIPT = '[danpass_parser.py]: '
 parser = optparse.OptionParser()
 parser.add_option('-o', '--output',
                   dest="fout",
-                  default="danpass_kaldi",
+                  default="danpass_out",
                   )
 parser.add_option('-c', '--corpus',
                   dest="fin",
@@ -25,13 +25,6 @@ except AssertionError:
     sys.exit('Terminate.')
 path = os.path.abspath(options.fin)
 monologues = DanPASS(path, os.path.join(path, options.fout))
-
-path = '/home/akirkedal/software/praat/scripts/test'
-monologues = DanPASS(path, 'danpass_kaldi')
-print(monologues['m_018_k.TextGrid'])
-print(monologues['m_018_k.TextGrid'].tiers[0])
-print(monologues['m_018_k.TextGrid'].tiers[0].intervals[0])
-
 monologues.printKaldiData(os.path.join(path, 'danpass_kaldi'))
 
 
